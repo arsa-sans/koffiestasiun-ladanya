@@ -1,26 +1,461 @@
+/* app/globals.css — Koffie Station × Ladanya Design System */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+JP:wght@300;400;500&family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================
+   DESIGN TOKENS
+   ============================================ */
+@theme {
+  /* Colors */
+  --color-midnight: #111111;
+  --color-espresso: #181818;
+  --color-charcoal: #221a17;
+  --color-latte: #eadbc8;
+  --color-caramel: #c08b5c;
+  --color-japanese-wood: #8a6a55;
+  --color-matcha: #556b4f;
+  --color-beige: #d8c6b5;
+  --color-surface: #1e1e1e;
+  --color-surface-2: #252525;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-border-hover: rgba(192, 139, 92, 0.4);
+
+  /* Status Colors */
+  --color-pending: #f59e0b;
+  --color-cooking: #3b82f6;
+  --color-ready: #10b981;
+  --color-delivered: #8b5cf6;
+  --color-canceled: #ef4444;
+  --color-void: #7f1d1d;
+
+  /* Station Colors */
+  --color-bar: #c08b5c;
+  --color-kitchen: #ef4444;
+  --color-sushi: #3b82f6;
+
+  /* Fonts */
+  --font-heading: "Playfair Display", Georgia, serif;
+  --font-jp: "Noto Serif JP", serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  /* Radius */
+  --radius-card: 20px;
+  --radius-button: 14px;
+  --radius-modal: 24px;
+  --radius-pill: 9999px;
+
+  /* Shadows */
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 24px rgba(192, 139, 92, 0.15);
+  --shadow-hover: 0 15px 40px rgba(0, 0, 0, 0.5);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ============================================
+   BASE RESET
+   ============================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #111111;
+  color: #eadbc8;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+.font-heading {
+  font-family: "Playfair Display", Georgia, serif;
+}
+.font-jp {
+  font-family: "Noto Serif JP", serif;
+}
+.font-body {
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #181818;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(192, 139, 92, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(192, 139, 92, 0.6);
+}
+
+/* ============================================
+   GLASS CARD
+   ============================================ */
+.glass-card {
+  background: rgba(24, 24, 24, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+}
+
+.glass-card-hover {
+  transition: all 0.25s ease;
+}
+.glass-card-hover:hover {
+  border-color: rgba(192, 139, 92, 0.35);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   SIDEBAR
+   ============================================ */
+.sidebar {
+  background: rgba(17, 17, 17, 0.97);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ============================================
+   PRODUCT CARD
+   ============================================ */
+.product-card {
+  background: #181818;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+.product-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(192, 139, 92, 0.5);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+.product-card:active {
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.btn-primary {
+  background: #c08b5c;
+  color: #111111;
+  height: 52px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-primary:hover {
+  background: #d4a070;
+  box-shadow: 0 8px 24px rgba(192, 139, 92, 0.3);
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: #252525;
+  color: #eadbc8;
+  height: 44px;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.btn-secondary:hover {
+  background: #2f2f2f;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.btn-danger {
+  background: #7f1d1d;
+  color: #fca5a5;
+  height: 44px;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.btn-danger:hover {
+  background: #991b1b;
+}
+
+/* ============================================
+   KITCHEN CARD
+   ============================================ */
+.kitchen-card {
+  background: #1a1a1a;
+  border-left: 5px solid #c08b5c;
+  border-radius: 18px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+.kitchen-card.status-pending {
+  border-left-color: #f59e0b;
+}
+.kitchen-card.status-queued {
+  border-left-color: #d97706;
+}
+.kitchen-card.status-cooking {
+  border-left-color: #3b82f6;
+}
+.kitchen-card.status-ready {
+  border-left-color: #10b981;
+}
+.kitchen-card.status-delivered {
+  border-left-color: #8b5cf6;
+}
+
+/* ============================================
+   STATUS BADGE
+   ============================================ */
+.badge-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.badge-cooking {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.badge-ready {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.badge-delivered {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+.badge-canceled {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.badge-void {
+  background: rgba(127, 29, 29, 0.3);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* ============================================
+   LOW STOCK ALERT
+   ============================================ */
+.low-stock-row {
+  background: rgba(245, 158, 11, 0.06);
+  border-left: 4px solid #f59e0b;
+}
+
+/* ============================================
+   INPUT
+   ============================================ */
+.pos-input {
+  background: #252525;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: #eadbc8;
+  padding: 12px 16px;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+.pos-input:focus {
+  outline: none;
+  border-color: rgba(192, 139, 92, 0.5);
+  box-shadow: 0 0 0 3px rgba(192, 139, 92, 0.1);
+}
+.pos-input::placeholder {
+  color: rgba(216, 198, 181, 0.35);
+}
+
+/* ============================================
+   TABLE
+   ============================================ */
+.pos-table {
+  width: 100%;
+  border-spacing: 0 8px;
+  border-collapse: separate;
+}
+.pos-table th {
+  color: rgba(216, 198, 181, 0.5);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 8px 16px;
+  text-align: left;
+}
+.pos-table td {
+  background: #181818;
+  padding: 14px 16px;
+  color: #eadbc8;
+  font-size: 14px;
+}
+.pos-table td:first-child {
+  border-radius: 12px 0 0 12px;
+}
+.pos-table td:last-child {
+  border-radius: 0 12px 12px 0;
+}
+.pos-table tr:hover td {
+  background: #1e1e1e;
+}
+
+/* ============================================
+   THERMAL RECEIPT
+   ============================================ */
+@media print {
+  .receipt-container {
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    color: #000;
+    background: #fff;
+    width: 80mm;
+    padding: 8px;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    #1e1e1e 25%,
+    #2a2a2a 50%,
+    #1e1e1e 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(192, 139, 92, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(192, 139, 92, 0);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slide-up 0.3s ease forwards;
+}
+
+/* ============================================
+   PILL MODIFIER BUTTON
+   ============================================ */
+.modifier-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #252525;
+  color: #d8c6b5;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.modifier-pill:hover {
+  border-color: rgba(192, 139, 92, 0.4);
+  color: #eadbc8;
+}
+.modifier-pill.selected {
+  background: rgba(192, 139, 92, 0.15);
+  border-color: #c08b5c;
+  color: #c08b5c;
+}
+
+/* ============================================
+   CART PANEL
+   ============================================ */
+.cart-panel {
+  background: rgba(17, 17, 17, 0.98);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================
+   GRADIENT TEXT
+   ============================================ */
+.gradient-text {
+  background: linear-gradient(135deg, #c08b5c 0%, #eadbc8 50%, #8a6a55 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   TOUCH OPTIMIZATION
+   ============================================ */
+button,
+[role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Large touch targets for tablet */
+.touch-target {
+  min-height: 48px;
+  min-width: 48px;
 }

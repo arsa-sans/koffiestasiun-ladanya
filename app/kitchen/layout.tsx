@@ -1,0 +1,20 @@
+// app/kitchen/layout.tsx
+import { Metadata } from "next";
+import Sidebar from "@/components/shared/Sidebar";
+
+export const metadata: Metadata = {
+  title: "Kitchen Display",
+};
+
+export default function KitchenLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex h-screen overflow-hidden" style={{ background: "#0f0f0f" }}>
+      <Sidebar role="kitchen" />
+      <main className="flex-1 overflow-hidden">{children}</main>
+    </div>
+  );
+}
