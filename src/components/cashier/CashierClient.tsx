@@ -2,13 +2,14 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search } from "lucide-react";
+import { Search, Settings2 } from "lucide-react";
 import ProductCard from "@/components/cashier/ProductCard";
 import CartPanel, { type CartItemType } from "@/components/cashier/CartPanel";
 import ModifierModal, { type SelectedModifier } from "@/components/cashier/ModifierModal";
 import PaymentModal from "@/components/cashier/PaymentModal";
+import RecipeDetailModal from "@/components/cashier/RecipeDetailModal";
+import TableManagementModal from "@/components/cashier/TableManagementModal";
 import { createOrder } from "@/server/actions/orders";
-import { calculateOrderAmounts } from "@/lib/utils/format";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 
@@ -34,6 +35,9 @@ export default function CashierClient({ categories, products, tables }: CashierC
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
   const [payingTotal, setPayingTotal] = useState(0);
   const [orderPlacing, setOrderPlacing] = useState(false);
+  const [recipeProductId, setRecipeProductId] = useState<string | null>(null);
+  const [showTableManager, setShowTableManager] = useState(false);
+  const [localTables, setLocalTables] = useState(tables);
 
   const filteredProducts = products.filter((p) => {
     if (selectedCategory !== "all" && p.categoryId !== selectedCategory) return false;
@@ -42,19 +46,15 @@ export default function CashierClient({ categories, products, tables }: CashierC
   });
 
   const handleProductClick = async (product: Product): Promise<void> => {
-    // Fetch modifier groups for this product
+    // Always show the detail modal (quantity, notes, modifiers if any)
     try {
       const res = await fetch(`/api/products/${product.id}/modifiers`);
       const data = await res.json();
-      if (data.modifierGroups?.length > 0) {
-        setModifierGroups(data.modifierGroups);
-        setModifierProduct(product);
-      } else {
-        addToCart(product, 1, [], "");
-      }
+      setModifierGroups(data.modifierGroups || []);
     } catch {
-      addToCart(product, 1, [], "");
+      setModifierGroups([]);
     }
+    setModifierProduct(product);
   };
 
   const addToCart = useCallback((product: { id: string; name: string; price: string }, qty: number, modifiers: SelectedModifier[], notes: string) => {
@@ -85,12 +85,6 @@ export default function CashierClient({ categories, products, tables }: CashierC
     if (cartItems.length === 0) return;
     setOrderPlacing(true);
 
-    const subtotal = cartItems.reduce((sum, item) => {
-      const modTotal = item.modifiers.reduce((ms, m) => ms + m.price, 0);
-      return sum + (item.unitPrice + modTotal) * item.quantity;
-    }, 0);
-    const { totalAmount } = calculateOrderAmounts(subtotal);
-
     try {
       const result = await createOrder({
         tableId: selectedTableId || undefined,
@@ -109,7 +103,7 @@ export default function CashierClient({ categories, products, tables }: CashierC
 
       if (result.success && result.orderId) {
         setPayingOrderId(result.orderId);
-        setPayingTotal(totalAmount);
+        setPayingTotal(result.totalAmount);
         toast.success(`Order ${result.orderNumber} dibuat!`);
       }
     } catch (err) {
@@ -133,10 +127,10 @@ export default function CashierClient({ categories, products, tables }: CashierC
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="px-5 py-4 flex items-center gap-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(17,17,17,0.8)" }}>
+        <div className="px-5 py-4 flex items-center gap-4" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)", background: "rgba(248,245,242,0.8)" }}>
           {/* Search */}
           <div className="flex-1 relative max-w-xs">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" color="rgba(216,198,181,0.35)" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" color="rgba(44,36,27,0.35)" />
             <input type="text" placeholder="Cari menu..." value={search} onChange={(e) => setSearch(e.target.value)}
               className="pos-input pl-9" style={{ fontSize: "14px", padding: "9px 12px 9px 36px" }} />
           </div>
@@ -145,16 +139,32 @@ export default function CashierClient({ categories, products, tables }: CashierC
           <select value={selectedTableId} onChange={(e) => setSelectedTableId(e.target.value)}
             className="pos-input" style={{ fontSize: "13px", padding: "9px 12px", width: "auto", cursor: "pointer" }}>
             <option value="">Takeaway</option>
-            {tables.map((t) => <option key={t.id} value={t.id}>Meja {t.code}</option>)}
+            {localTables.map((t) => <option key={t.id} value={t.id}>Meja {t.code}</option>)}
           </select>
+
+          {/* Table management button */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowTableManager(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors"
+            style={{
+              background: "rgba(192,139,92,0.1)",
+              border: "1px solid rgba(192,139,92,0.2)",
+              color: "#C08B5C",
+            }}
+            title="Kelola Meja"
+          >
+            <Settings2 size={14} />
+            Meja
+          </motion.button>
         </div>
 
         {/* Category Filter */}
-        <div className="px-5 py-3 flex items-center gap-2 overflow-x-auto" style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+        <div className="px-5 py-3 flex items-center gap-2 overflow-x-auto" style={{ borderBottom: "1px solid rgba(0,0,0,0.04)" }}>
           {[{ id: "all", name: "Semua" }, ...categories].map((cat) => (
             <motion.button key={cat.id} whileTap={{ scale: 0.95 }} onClick={() => setSelectedCategory(cat.id)}
               className="modifier-pill flex-shrink-0"
-              style={{ background: selectedCategory === cat.id ? "rgba(192,139,92,0.15)" : "#252525", borderColor: selectedCategory === cat.id ? "#C08B5C" : "rgba(255,255,255,0.1)", color: selectedCategory === cat.id ? "#C08B5C" : "#D8C6B5" }}>
+              style={{ background: selectedCategory === cat.id ? "rgba(192,139,92,0.15)" : "#F1EBE4", borderColor: selectedCategory === cat.id ? "#C08B5C" : "rgba(0,0,0,0.1)", color: selectedCategory === cat.id ? "#C08B5C" : "#5C4B3F" }}>
               {cat.name}
             </motion.button>
           ))}
@@ -166,14 +176,14 @@ export default function CashierClient({ categories, products, tables }: CashierC
             <AnimatePresence>
               {filteredProducts.map((product, i) => (
                 <motion.div key={product.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                  <ProductCard product={product} onSelect={handleProductClick} />
+                  <ProductCard product={product} onSelect={handleProductClick} onViewRecipe={(id) => setRecipeProductId(id)} />
                 </motion.div>
               ))}
             </AnimatePresence>
             {filteredProducts.length === 0 && (
               <div className="col-span-full flex flex-col items-center justify-center py-20">
                 <p className="text-4xl mb-3">☕</p>
-                <p style={{ color: "rgba(216,198,181,0.4)" }}>Tidak ada produk ditemukan</p>
+                <p style={{ color: "rgba(44,36,27,0.4)" }}>Tidak ada produk ditemukan</p>
               </div>
             )}
           </div>
@@ -202,6 +212,21 @@ export default function CashierClient({ categories, products, tables }: CashierC
             onClose={() => setPayingOrderId(null)} onSuccess={handlePaymentSuccess} />
         )}
       </AnimatePresence>
+
+      {/* Recipe Detail Modal */}
+      <RecipeDetailModal
+        productId={recipeProductId}
+        onClose={() => setRecipeProductId(null)}
+      />
+
+      {/* Table Management Modal */}
+      {showTableManager && (
+        <TableManagementModal
+          tables={localTables}
+          onClose={() => setShowTableManager(false)}
+          onTablesChange={(newTables) => setLocalTables(newTables)}
+        />
+      )}
     </div>
   );
 }

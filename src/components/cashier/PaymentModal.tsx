@@ -72,7 +72,7 @@ export default function PaymentModal({ orderId, totalAmount, onClose, onSuccess 
             className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: "rgba(16,185,129,0.15)", border: "2px solid #10B981" }}>
             <CheckCircle size={48} color="#10B981" />
           </motion.div>
-          <p className="text-2xl font-bold" style={{ color: "#EADBC8", fontFamily: "Playfair Display, serif" }}>Pembayaran Berhasil!</p>
+          <p className="text-2xl font-bold" style={{ color: "#2C241B", fontFamily: "Playfair Display, serif" }}>Pembayaran Berhasil!</p>
           <p style={{ color: "#10B981" }}>{formatCurrency(totalAmount)}</p>
         </motion.div>
       </div>
@@ -83,28 +83,28 @@ export default function PaymentModal({ orderId, totalAmount, onClose, onSuccess 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }} />
       <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-md rounded-3xl p-6" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.08)" }}
+        className="relative w-full max-w-md rounded-3xl p-6" style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.08)" }}
         onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold" style={{ color: "#EADBC8", fontFamily: "Playfair Display, serif" }}>Pembayaran</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
-            <X size={16} color="rgba(216,198,181,0.7)" />
+          <h3 className="text-lg font-bold" style={{ color: "#2C241B", fontFamily: "Playfair Display, serif" }}>Pembayaran</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(0,0,0,0.06)" }}>
+            <X size={16} color="rgba(44,36,27,0.7)" />
           </button>
         </div>
 
         <div className="rounded-2xl p-4 mb-5 text-center" style={{ background: "rgba(192,139,92,0.08)", border: "1px solid rgba(192,139,92,0.2)" }}>
-          <p className="text-sm mb-1" style={{ color: "rgba(216,198,181,0.5)" }}>Total Tagihan</p>
+          <p className="text-sm mb-1" style={{ color: "rgba(44,36,27,0.5)" }}>Total Tagihan</p>
           <p className="text-3xl font-bold" style={{ color: "#C08B5C", fontFamily: "Playfair Display, serif" }}>{formatCurrency(totalAmount)}</p>
         </div>
 
         <div className="space-y-3 mb-4">
           {entries.map((entry, i) => (
-            <div key={i} className="rounded-2xl p-3" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <div key={i} className="rounded-2xl p-3" style={{ background: "#F1EBE4", border: "1px solid rgba(0,0,0,0.06)" }}>
               <div className="flex gap-2 mb-2">
                 {METHODS.map((m) => (
                   <button key={m.id} onClick={() => updateEntry(i, "method", m.id)}
                     className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl text-xs transition-all"
-                    style={{ background: entry.method === m.id ? "rgba(192,139,92,0.15)" : "transparent", color: entry.method === m.id ? "#C08B5C" : "rgba(216,198,181,0.4)", border: entry.method === m.id ? "1px solid rgba(192,139,92,0.3)" : "1px solid transparent" }}>
+                    style={{ background: entry.method === m.id ? "rgba(192,139,92,0.15)" : "transparent", color: entry.method === m.id ? "#C08B5C" : "rgba(44,36,27,0.4)", border: entry.method === m.id ? "1px solid rgba(192,139,92,0.3)" : "1px solid transparent" }}>
                     {m.icon}
                     <span>{m.label}</span>
                   </button>
@@ -124,7 +124,7 @@ export default function PaymentModal({ orderId, totalAmount, onClose, onSuccess 
         </div>
 
         <button onClick={addEntry} className="w-full py-2.5 rounded-xl text-sm mb-4 flex items-center justify-center gap-2"
-          style={{ background: "rgba(255,255,255,0.04)", border: "1px dashed rgba(255,255,255,0.1)", color: "rgba(216,198,181,0.5)" }}>
+          style={{ background: "rgba(0,0,0,0.04)", border: "1px dashed rgba(0,0,0,0.1)", color: "rgba(44,36,27,0.5)" }}>
           <Plus size={14} /> Split Pembayaran
         </button>
 
@@ -136,7 +136,7 @@ export default function PaymentModal({ orderId, totalAmount, onClose, onSuccess 
         )}
 
         <button onClick={handlePay} disabled={loading || remaining > 0.01}
-          className="btn-primary w-full" style={{ background: remaining > 0.01 ? "#333" : "#C08B5C", cursor: remaining > 0.01 ? "not-allowed" : "pointer" }}>
+          className="btn-primary w-full" style={{ background: remaining > 0.01 ? "#E5E7EB" : "#C08B5C", color: remaining > 0.01 ? "#9CA3AF" : "#FFFFFF", cursor: remaining > 0.01 ? "not-allowed" : "pointer", border: remaining > 0.01 ? "none" : undefined }}>
           {loading ? "Memproses..." : "Konfirmasi Pembayaran"}
         </button>
       </motion.div>

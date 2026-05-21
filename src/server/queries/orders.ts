@@ -41,8 +41,11 @@ export async function getOrderById(id: string) {
 }
 
 export async function getKitchenOrders() {
+  // Include both "open" and "paid" orders — takeaway orders are often paid
+  // immediately but kitchen still needs to see and cook them.
+  // We filter out fully delivered orders on the client side.
   return db.query.orders.findMany({
-    where: eq(orders.status, "open"),
+    where: sql`${orders.status} IN ('open', 'paid')`,
     orderBy: desc(orders.createdAt),
     with: {
       table: true,

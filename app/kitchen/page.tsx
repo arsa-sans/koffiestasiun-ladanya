@@ -11,6 +11,7 @@ export default async function KitchenPage() {
   const orders = rawOrders.map((order) => ({
     id: order.id,
     orderNumber: order.orderNumber,
+    orderType: order.orderType,
     createdAt: order.createdAt.toISOString(),
     table: order.table ? { code: order.table.code } : null,
     items: order.items.map((item) => ({
@@ -19,6 +20,8 @@ export default async function KitchenPage() {
       status: item.status,
       notes: item.notes,
       createdAt: item.createdAt.toISOString(),
+      startedAt: item.startedAt ? item.startedAt.toISOString() : null,
+      completedAt: item.completedAt ? item.completedAt.toISOString() : null,
       product: {
         name: item.product.name,
         station: { type: item.product.station?.type || "kitchen" },

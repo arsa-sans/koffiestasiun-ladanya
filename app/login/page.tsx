@@ -31,14 +31,29 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/cashier");
+    // Fetch user role and redirect to correct dashboard
+    try {
+      const res = await fetch("/api/auth/role");
+      const data = await res.json();
+
+      const roleRedirects: Record<string, string> = {
+        admin: "/admin",
+        cashier: "/cashier",
+        kitchen: "/kitchen",
+      };
+
+      const target = roleRedirects[data.role] || "/cashier";
+      router.push(target);
+    } catch {
+      router.push("/cashier");
+    }
     router.refresh();
   };
 
   return (
     <div
       className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{ background: "#111111" }}
+      style={{ background: "#F8F5F2" }}
     >
       {/* Background ambient */}
       <div
@@ -87,7 +102,7 @@ export default function LoginPage() {
             style={{
               fontFamily: "Playfair Display, serif",
               background:
-                "linear-gradient(135deg, #C08B5C 0%, #EADBC8 60%, #8A6A55 100%)",
+                "linear-gradient(135deg, #C08B5C 0%, #2C241B 60%, #8A6A55 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -102,7 +117,7 @@ export default function LoginPage() {
             className="text-sm"
             style={{
               fontFamily: "Noto Serif JP, serif",
-              color: "rgba(216,198,181,0.5)",
+              color: "rgba(44,36,27,0.5)",
             }}
           >
             × Ladanya Japanese Food
@@ -112,7 +127,7 @@ export default function LoginPage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
             className="text-xs mt-2"
-            style={{ color: "rgba(216,198,181,0.35)" }}
+            style={{ color: "rgba(44,36,27,0.35)" }}
           >
             Restaurant Operating System
           </motion.p>
@@ -125,14 +140,15 @@ export default function LoginPage() {
           transition={{ delay: 0.4, duration: 0.5 }}
           className="rounded-3xl p-8"
           style={{
-            background: "rgba(24,24,24,0.9)",
-            border: "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(255,255,255,0.9)",
+            border: "1px solid rgba(0,0,0,0.07)",
             backdropFilter: "blur(16px)",
+            boxShadow: "0 10px 40px -10px rgba(0,0,0,0.05)"
           }}
         >
           <h2
             className="text-xl font-semibold mb-6"
-            style={{ color: "#EADBC8" }}
+            style={{ color: "#2C241B" }}
           >
             Masuk ke Sistem
           </h2>
@@ -141,7 +157,7 @@ export default function LoginPage() {
             <div>
               <label
                 className="block text-sm font-medium mb-2"
-                style={{ color: "rgba(216,198,181,0.7)" }}
+                style={{ color: "rgba(44,36,27,0.7)" }}
               >
                 Email
               </label>
@@ -159,7 +175,7 @@ export default function LoginPage() {
             <div>
               <label
                 className="block text-sm font-medium mb-2"
-                style={{ color: "rgba(216,198,181,0.7)" }}
+                style={{ color: "rgba(44,36,27,0.7)" }}
               >
                 Password
               </label>
@@ -177,7 +193,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1"
-                  style={{ color: "rgba(216,198,181,0.5)" }}
+                  style={{ color: "rgba(44,36,27,0.5)" }}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -209,7 +225,7 @@ export default function LoginPage() {
         {/* Footer */}
         <p
           className="text-center text-xs mt-6"
-          style={{ color: "rgba(216,198,181,0.25)" }}
+          style={{ color: "rgba(44,36,27,0.25)" }}
         >
           {APP_NAME} · POS v1.0
         </p>

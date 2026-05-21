@@ -100,6 +100,8 @@ export const orderItems = pgTable(
     status: itemStatusEnum("status").notNull().default("pending"),
     notes: text("notes"),
     inventoryDeducted: boolean("inventory_deducted").notNull().default(false),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

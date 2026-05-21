@@ -36,10 +36,10 @@ export default function AdminOverviewClient(props: AdminOverviewClientProps) {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-1" style={{ color: "#EADBC8", fontFamily: "Playfair Display, serif" }}>
+        <h1 className="text-2xl font-bold mb-1" style={{ color: "#2C241B", fontFamily: "Playfair Display, serif" }}>
           Dashboard Operasional
         </h1>
-        <p className="text-sm" style={{ color: "rgba(216,198,181,0.5)" }}>
+        <p className="text-sm" style={{ color: "rgba(44,36,27,0.5)" }}>
           {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         </p>
       </div>
@@ -48,14 +48,14 @@ export default function AdminOverviewClient(props: AdminOverviewClientProps) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {stats.map((stat, i) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-            className="rounded-2xl p-5" style={{ background: "#181818", border: "1px solid rgba(255,255,255,0.05)" }}>
+            className="rounded-2xl p-5" style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.05)" }}>
             <div className="flex items-start justify-between mb-4">
               <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: `${stat.color}18`, color: stat.color }}>
                 {stat.icon}
               </div>
             </div>
-            <p className="text-2xl font-bold mb-1" style={{ color: "#EADBC8" }}>{stat.value}</p>
-            <p className="text-xs font-semibold mb-0.5" style={{ color: "rgba(216,198,181,0.5)" }}>{stat.label}</p>
+            <p className="text-2xl font-bold mb-1" style={{ color: "#2C241B" }}>{stat.value}</p>
+            <p className="text-xs font-semibold mb-0.5" style={{ color: "rgba(44,36,27,0.5)" }}>{stat.label}</p>
             <p className="text-xs" style={{ color: stat.color }}>{stat.sub}</p>
           </motion.div>
         ))}
@@ -71,9 +71,9 @@ export default function AdminOverviewClient(props: AdminOverviewClientProps) {
         ].map((link) => (
           <Link key={link.href} href={link.href}
             className="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all"
-            style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.06)", color: "#D8C6B5" }}
+            style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.06)", color: "#5C4B3F" }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(192,139,92,0.3)"; e.currentTarget.style.color = "#C08B5C"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "#D8C6B5"; }}>
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.06)"; e.currentTarget.style.color = "#5C4B3F"; }}>
             {link.label}
             <ArrowRight size={14} />
           </Link>
@@ -81,9 +81,9 @@ export default function AdminOverviewClient(props: AdminOverviewClientProps) {
       </div>
 
       {/* Recent Orders */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: "#181818", border: "1px solid rgba(255,255,255,0.05)" }}>
-        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-          <h2 className="font-semibold" style={{ color: "#EADBC8" }}>Order Terbaru</h2>
+      <div className="rounded-2xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.05)" }}>
+        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
+          <h2 className="font-semibold" style={{ color: "#2C241B" }}>Order Terbaru</h2>
           <Link href="/admin/reports" className="text-xs" style={{ color: "#C08B5C" }}>Lihat semua →</Link>
         </div>
         <div className="overflow-x-auto">
@@ -104,15 +104,15 @@ export default function AdminOverviewClient(props: AdminOverviewClientProps) {
                 return (
                   <tr key={order.id}>
                     <td><span className="font-mono text-xs" style={{ color: "#C08B5C" }}>{order.orderNumber}</span></td>
-                    <td style={{ color: "rgba(216,198,181,0.7)" }}>{order.tableCode ? `Meja ${order.tableCode}` : "Takeaway"}</td>
-                    <td style={{ color: "rgba(216,198,181,0.7)" }}>{order.itemCount} item</td>
-                    <td className="font-semibold" style={{ color: "#EADBC8" }}>{formatCurrency(parseFloat(order.totalAmount))}</td>
+                    <td style={{ color: "rgba(44,36,27,0.7)" }}>{order.tableCode ? `Meja ${order.tableCode}` : "Takeaway"}</td>
+                    <td style={{ color: "rgba(44,36,27,0.7)" }}>{order.itemCount} item</td>
+                    <td className="font-semibold" style={{ color: "#2C241B" }}>{formatCurrency(parseFloat(order.totalAmount))}</td>
                     <td>
                       <span className="text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: `${statusColor}18`, color: statusColor, border: `1px solid ${statusColor}33` }}>
                         {order.status}
                       </span>
                     </td>
-                    <td className="text-xs" style={{ color: "rgba(216,198,181,0.5)" }}>{formatDateTime(order.createdAt)}</td>
+                    <td className="text-xs" style={{ color: "rgba(44,36,27,0.5)" }}>{formatDateTime(order.createdAt)}</td>
                   </tr>
                 );
               })}

@@ -6,6 +6,7 @@ import { orders, payments } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { deductInventoryForOrder } from "@/server/services/inventory";
+import { logActivity } from "@/server/services/activity-log";
 
 export interface PaymentEntry {
   method: "cash" | "qris" | "card" | "ewallet" | "transfer";
@@ -46,5 +47,15 @@ export async function processPayment(
   revalidatePath("/admin/inventory");
   revalidatePath("/admin/reports");
 
+  const totalPaid = paymentEntries.reduce((s, p) => s + p.amount, 0);
+  logActivity({
+    activity: "payment",
+    entityType: "order",
+    entityId: orderId,
+    description: `Pembayaran Rp ${totalPaid.toLocaleString("id-ID")} (${paymentEntries.map((p) => p.method).join(", ")})`,
+    page: "/cashier",
+  });
+
   return { success: true };
 }
+

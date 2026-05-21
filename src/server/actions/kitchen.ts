@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { orderItems } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { logActivity } from "@/server/services/activity-log";
 
 const ITEM_STATUS_FLOW = [
   "pending",
@@ -17,13 +18,33 @@ const ITEM_STATUS_FLOW = [
 type ItemStatus = (typeof ITEM_STATUS_FLOW)[number] | "canceled" | "void";
 
 export async function updateItemStatus(itemId: string, status: ItemStatus) {
+  const updateData: Record<string, unknown> = {
+    status,
+    updatedAt: new Date(),
+  };
+
+  // Track cooking duration timestamps
+  if (status === "cooking") {
+    updateData.startedAt = new Date();
+  } else if (status === "ready") {
+    updateData.completedAt = new Date();
+  }
+
   await db
     .update(orderItems)
-    .set({ status, updatedAt: new Date() })
+    .set(updateData)
     .where(eq(orderItems.id, itemId));
 
   revalidatePath("/kitchen");
   revalidatePath("/cashier");
+
+  logActivity({
+    activity: "status_change",
+    entityType: "order_item",
+    entityId: itemId,
+    description: `Item status diubah ke ${status}`,
+    page: "/kitchen",
+  });
 
   return { success: true };
 }

@@ -1,8 +1,24 @@
-export default function TablesPage() {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+import { db } from "@/db";
+import { diningTables } from "@/db/schema";
+import { asc } from "drizzle-orm";
+import TablesClient from "@/components/admin/TablesClient";
+
+export default async function TablesPage() {
+  const allTables = await db.select().from(diningTables).orderBy(asc(diningTables.code));
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4" style={{ color: "#EADBC8", fontFamily: "Playfair Display, serif" }}>Manajemen Meja</h1>
-      <p style={{ color: "rgba(216,198,181,0.5)" }}>Kelola meja restoran (A01–D05).</p>
-    </div>
+    <TablesClient
+      tables={allTables.map((t) => ({
+        id: t.id,
+        code: t.code,
+        name: t.name,
+        capacity: t.capacity,
+        status: t.status,
+        isActive: t.isActive,
+      }))}
+    />
   );
 }

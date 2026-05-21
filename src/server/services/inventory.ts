@@ -1,6 +1,8 @@
 // src/server/services/inventory.ts
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { db } from "@/db";
 import {
   orderItems,
@@ -127,4 +129,55 @@ export async function adjustStock(
   });
 
   return { success: true, stockAfter };
+}
+
+export async function createIngredient(data: {
+  name: string;
+  unit: string;
+  stock?: string;
+  minStock?: string;
+  costPerUnit?: string;
+}) {
+  const [created] = await db
+    .insert(ingredients)
+    .values({
+      name: data.name,
+      unit: data.unit,
+      stock: data.stock || "0",
+      minStock: data.minStock || "0",
+      costPerUnit: data.costPerUnit || "0",
+    })
+    .returning();
+
+  revalidatePath("/admin/inventory");
+  return { success: true, data: created };
+}
+
+export async function updateIngredient(
+  id: string,
+  data: {
+    name?: string;
+    unit?: string;
+    minStock?: string;
+    costPerUnit?: string;
+    isActive?: boolean;
+  }
+) {
+  const [updated] = await db
+    .update(ingredients)
+    .set({
+      ...data,
+      updatedAt: new Date(),
+    })
+    .where(eq(ingredients.id, id))
+    .returning();
+
+  revalidatePath("/admin/inventory");
+  return { success: true, data: updated };
+}
+
+export async function deleteIngredient(id: string) {
+  await db.delete(ingredients).where(eq(ingredients.id, id));
+  revalidatePath("/admin/inventory");
+  return { success: true };
 }

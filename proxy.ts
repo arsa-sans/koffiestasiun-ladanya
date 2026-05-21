@@ -1,6 +1,21 @@
-// proxy.ts — Next.js 16 route protection (replaces middleware.ts)
+// proxy.ts — Next.js 16 route protection with role-based access control
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import postgres from "postgres";
+
+// Role → allowed path prefixes
+const ROLE_PATHS: Record<string, string[]> = {
+  admin: ["/admin", "/cashier", "/kitchen"],
+  cashier: ["/cashier"],
+  kitchen: ["/kitchen"],
+};
+
+// Role → default dashboard
+const ROLE_DASHBOARD: Record<string, string> = {
+  admin: "/admin",
+  cashier: "/cashier",
+  kitchen: "/kitchen",
+};
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -32,20 +47,71 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  // Public routes
-  const publicRoutes = ["/login", "/auth/callback"];
+  // Public routes — no protection needed
+  const publicRoutes = ["/login", "/auth/callback", "/unauthorized"];
   if (publicRoutes.some((route) => pathname.startsWith(route))) {
     return supabaseResponse;
   }
 
-  // Redirect unauthenticated users
+  // Redirect unauthenticated users to login
   if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
+  // Protected dashboard routes — check role
+  const protectedPrefixes = ["/admin", "/cashier", "/kitchen"];
+  const isProtectedRoute = protectedPrefixes.some((prefix) =>
+    pathname.startsWith(prefix)
+  );
+
+  if (isProtectedRoute) {
+    // Query user role from DB directly (proxy runs on Node.js runtime)
+    const role = await getUserRoleFromDB(user.id);
+
+    if (!role) {
+      // User exists in auth but not in users table
+      const url = request.nextUrl.clone();
+      url.pathname = "/unauthorized";
+      return NextResponse.redirect(url);
+    }
+
+    // Check if role is allowed to access this path
+    const allowedPaths = ROLE_PATHS[role] || [];
+    const hasAccess = allowedPaths.some((prefix) =>
+      pathname.startsWith(prefix)
+    );
+
+    if (!hasAccess) {
+      // Redirect to their own dashboard
+      const url = request.nextUrl.clone();
+      url.pathname = ROLE_DASHBOARD[role] || "/login";
+      return NextResponse.redirect(url);
+    }
+
+    // Set role header for downstream use
+    supabaseResponse.headers.set("x-user-role", role);
+  }
+
   return supabaseResponse;
+}
+
+// Lightweight DB query for proxy — avoids importing Drizzle ORM
+// which may have module issues in the proxy context
+async function getUserRoleFromDB(
+  authId: string
+): Promise<string | null> {
+  try {
+    const sql = postgres(process.env.DATABASE_URL!, { max: 1 });
+    const result = await sql`
+      SELECT role FROM users WHERE auth_id = ${authId} LIMIT 1
+    `;
+    await sql.end();
+    return result[0]?.role || null;
+  } catch {
+    return null;
+  }
 }
 
 export const config = {

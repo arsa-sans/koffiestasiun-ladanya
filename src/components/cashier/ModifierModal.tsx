@@ -134,8 +134,8 @@ export default function ModifierModal({
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl"
           style={{
-            background: "#1a1a1a",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "#FFFFFF",
+            border: "1px solid rgba(0,0,0,0.08)",
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -143,14 +143,14 @@ export default function ModifierModal({
           <div
             className="sticky top-0 flex items-center justify-between p-5 z-10"
             style={{
-              background: "#1a1a1a",
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              background: "#FFFFFF",
+              borderBottom: "1px solid rgba(0,0,0,0.06)",
             }}
           >
             <div>
               <h3
                 className="text-lg font-bold"
-                style={{ color: "#EADBC8", fontFamily: "Playfair Display, serif" }}
+                style={{ color: "#2C241B", fontFamily: "Playfair Display, serif" }}
               >
                 {product.name}
               </h3>
@@ -161,9 +161,9 @@ export default function ModifierModal({
             <button
               onClick={onClose}
               className="w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ background: "rgba(255,255,255,0.06)" }}
+              style={{ background: "rgba(0,0,0,0.06)" }}
             >
-              <X size={18} color="rgba(216,198,181,0.7)" />
+              <X size={18} color="rgba(44,36,27,0.7)" />
             </button>
           </div>
 
@@ -174,7 +174,7 @@ export default function ModifierModal({
                 <div className="flex items-center gap-2 mb-3">
                   <h4
                     className="text-sm font-semibold"
-                    style={{ color: "#EADBC8" }}
+                    style={{ color: "#2C241B" }}
                   >
                     {group.name}
                   </h4>
@@ -206,11 +206,11 @@ export default function ModifierModal({
                         style={{
                           background: isSelected
                             ? "rgba(192,139,92,0.15)"
-                            : "#252525",
+                            : "#F1EBE4",
                           borderColor: isSelected
                             ? "#C08B5C"
-                            : "rgba(255,255,255,0.12)",
-                          color: isSelected ? "#C08B5C" : "#D8C6B5",
+                            : "rgba(0,0,0,0.12)",
+                          color: isSelected ? "#C08B5C" : "#5C4B3F",
                         }}
                       >
                         {isSelected && (
@@ -223,7 +223,7 @@ export default function ModifierModal({
                             style={{
                               color: isSelected
                                 ? "rgba(192,139,92,0.8)"
-                                : "rgba(216,198,181,0.5)",
+                                : "rgba(44,36,27,0.5)",
                             }}
                           >
                             +{formatCurrency(parseFloat(option.price))}
@@ -240,7 +240,7 @@ export default function ModifierModal({
             <div>
               <label
                 className="block text-sm font-medium mb-2"
-                style={{ color: "rgba(216,198,181,0.6)" }}
+                style={{ color: "rgba(44,36,27,0.6)" }}
               >
                 Catatan Dapur
               </label>
@@ -256,29 +256,29 @@ export default function ModifierModal({
 
             {/* Quantity */}
             <div className="flex items-center justify-between">
-              <span className="text-sm" style={{ color: "rgba(216,198,181,0.6)" }}>
+              <span className="text-sm" style={{ color: "rgba(44,36,27,0.6)" }}>
                 Jumlah
               </span>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.08)" }}
+                  style={{ background: "#F1EBE4", border: "1px solid rgba(0,0,0,0.08)" }}
                 >
-                  <Minus size={16} color="#EADBC8" />
+                  <Minus size={16} color="#2C241B" />
                 </button>
                 <span
                   className="text-xl font-bold w-8 text-center"
-                  style={{ color: "#EADBC8" }}
+                  style={{ color: "#2C241B" }}
                 >
                   {quantity}
                 </span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
                   className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.08)" }}
+                  style={{ background: "#F1EBE4", border: "1px solid rgba(0,0,0,0.08)" }}
                 >
-                  <Plus size={16} color="#EADBC8" />
+                  <Plus size={16} color="#2C241B" />
                 </button>
               </div>
             </div>
@@ -288,8 +288,8 @@ export default function ModifierModal({
           <div
             className="sticky bottom-0 p-5"
             style={{
-              background: "#1a1a1a",
-              borderTop: "1px solid rgba(255,255,255,0.06)",
+              background: "#FFFFFF",
+              borderTop: "1px solid rgba(0,0,0,0.06)",
             }}
           >
             <button onClick={handleConfirm} className="btn-primary w-full">

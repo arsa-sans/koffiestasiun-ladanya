@@ -1,6 +1,7 @@
 // src/db/seed.ts
 // Run: bun run src/db/seed.ts
 import { drizzle } from "drizzle-orm/postgres-js";
+import { sql } from "drizzle-orm";
 import postgres from "postgres";
 import {
   categories, kitchenStations, diningTables,
@@ -13,6 +14,31 @@ const db = drizzle(client);
 
 async function seed() {
   console.log("🌱 Seeding Koffie Station × Ladanya POS...\n");
+
+  console.log("🧹 Clearing existing database records...");
+  await db.execute(sql`
+    TRUNCATE TABLE 
+      activity_logs,
+      inventory_transactions,
+      stock_opname_items,
+      stock_opnames,
+      void_logs,
+      payments,
+      order_item_modifiers,
+      order_items,
+      orders,
+      product_modifier_groups,
+      modifier_recipes,
+      modifier_options,
+      modifier_groups,
+      recipes,
+      ingredients,
+      products,
+      categories,
+      dining_tables,
+      kitchen_stations
+    RESTART IDENTITY CASCADE;
+  `);
 
   // ====== KITCHEN STATIONS ======
   console.log("📍 Seeding kitchen stations...");

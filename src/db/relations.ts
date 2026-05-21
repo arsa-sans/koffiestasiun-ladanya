@@ -20,6 +20,7 @@ import {
   inventoryTransactions,
   stockOpnames,
   stockOpnameItems,
+  activityLogs,
 } from "./schema";
 
 // --- Products ---
@@ -225,10 +226,20 @@ export const stockOpnameItemsRelations = relations(
   })
 );
 
+// --- Activity Logs ---
+export const activityLogsRelations = relations(activityLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [activityLogs.userId],
+    references: [users.id],
+  }),
+}));
+
 // --- Users ---
 export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
   voidLogs: many(voidLogs),
   inventoryTransactions: many(inventoryTransactions),
   stockOpnames: many(stockOpnames),
+  activityLogs: many(activityLogs),
 }));
+

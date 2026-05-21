@@ -4,8 +4,9 @@
 import { db } from "@/db";
 import { orders, orderItems, orderItemModifiers } from "@/db/schema";
 import { generateOrderNumber } from "@/lib/utils/format";
-import { calculateOrderAmounts } from "@/lib/utils/format";
 import { revalidatePath } from "next/cache";
+import { logActivity } from "@/server/services/activity-log";
+import { calculateFees } from "@/server/services/fees";
 
 export interface CartItem {
   productId: string;
@@ -36,7 +37,16 @@ export async function createOrder(data: {
     return sum + (item.unitPrice + modifiersTotal) * item.quantity;
   }, 0);
 
-  const { taxAmount, serviceAmount, totalAmount } = calculateOrderAmounts(subtotal);
+  // Dynamic fees from DB (replaces hardcoded TAX_RATE/SERVICE_RATE)
+  const { breakdown, totalFees } = await calculateFees(subtotal);
+
+  // Extract tax and service from breakdown for backward compatibility
+  const taxItem = breakdown.find((f) => f.name.toLowerCase().includes("ppn") || f.name.toLowerCase().includes("tax") || f.name.toLowerCase().includes("pajak"));
+  const serviceItem = breakdown.find((f) => f.name.toLowerCase().includes("service") || f.name.toLowerCase().includes("layanan"));
+
+  const taxAmount = taxItem?.amount || 0;
+  const serviceAmount = serviceItem?.amount || 0;
+  const totalAmount = subtotal + totalFees;
 
   const orderNumber = generateOrderNumber();
 
@@ -91,7 +101,17 @@ export async function createOrder(data: {
   revalidatePath("/cashier");
   revalidatePath("/kitchen");
 
-  return { success: true, orderId: order.id, orderNumber };
+  // Log activity
+  logActivity({
+    userId: cashierId || undefined,
+    activity: "create",
+    entityType: "order",
+    entityId: order.id,
+    description: `Order ${orderNumber} dibuat (${items.length} item)`,
+    page: "/cashier",
+  });
+
+  return { success: true, orderId: order.id, orderNumber, totalAmount };
 }
 
 export async function voidOrder(orderId: string, reason: string, userId?: string) {
@@ -102,6 +122,15 @@ export async function voidOrder(orderId: string, reason: string, userId?: string
 
   revalidatePath("/cashier");
   revalidatePath("/kitchen");
+
+  logActivity({
+    userId: userId || undefined,
+    activity: "update",
+    entityType: "order",
+    entityId: orderId,
+    description: `Order di-void: ${reason}`,
+    page: "/cashier",
+  });
 
   return { success: true };
 }

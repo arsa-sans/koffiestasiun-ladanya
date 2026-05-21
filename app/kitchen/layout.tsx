@@ -12,7 +12,7 @@ export default function KitchenLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#0f0f0f" }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: "#F8F5F2" }}>
       <Sidebar role="kitchen" />
       <main className="flex-1 overflow-hidden">{children}</main>
     </div>
