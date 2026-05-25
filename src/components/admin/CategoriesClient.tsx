@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Edit2, Trash2, X, Search, GripVertical } from "lucide-react";
 import { createCategory, updateCategory, deleteCategory } from "@/server/services/categories";
 import { toast } from "sonner";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 interface CategoryItem {
   id: string;
@@ -32,6 +33,9 @@ export default function CategoriesClient({ categories: initialCategories }: Cate
   const [formSlug, setFormSlug] = useState("");
   const [formDesc, setFormDesc] = useState("");
   const [formSort, setFormSort] = useState(0);
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string|null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const filtered = items.filter(
     (c) => !search || c.name.toLowerCase().includes(search.toLowerCase())
@@ -110,19 +114,18 @@ export default function CategoriesClient({ categories: initialCategories }: Cate
     }
   };
 
-  const handleDelete = async (id: string) => {
-    const cat = items.find((c) => c.id === id);
-    if (cat && cat.productCount > 0) {
-      toast.error("Tidak bisa menghapus kategori yang masih memiliki produk");
-      return;
-    }
-    if (!confirm("Yakin ingin menghapus kategori ini?")) return;
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return;
+    setDeleteLoading(true);
     try {
-      await deleteCategory(id);
-      setItems((prev) => prev.filter((c) => c.id !== id));
+      await deleteCategory(confirmDeleteId);
+      setItems((prev) => prev.filter((c) => c.id !== confirmDeleteId));
       toast.success("Kategori berhasil dihapus");
     } catch {
       toast.error("Gagal menghapus kategori");
+    } finally {
+      setDeleteLoading(false);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -306,7 +309,17 @@ export default function CategoriesClient({ categories: initialCategories }: Cate
                     <button onClick={() => openEdit(cat)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(192,139,92,0.1)" }}>
                       <Edit2 size={13} color="#C08B5C" />
                     </button>
-                    <button onClick={() => handleDelete(cat.id)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(239,68,68,0.08)" }}>
+                    <button
+                      onClick={() => {
+                        if (cat.productCount > 0) {
+                          toast.error("Tidak bisa menghapus kategori yang masih memiliki produk");
+                          return;
+                        }
+                        setConfirmDeleteId(cat.id);
+                      }}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: "rgba(239,68,68,0.08)" }}
+                    >
                       <Trash2 size={13} color="#f87171" />
                     </button>
                   </div>
@@ -323,6 +336,18 @@ export default function CategoriesClient({ categories: initialCategories }: Cate
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={handleDelete}
+        isLoading={deleteLoading}
+        title="Hapus Kategori"
+        message={`Apakah Anda yakin ingin menghapus kategori ${items.find(c => c.id === confirmDeleteId)?.name || ""}? Kategori ini akan dihapus secara permanen dari database.`}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        variant="danger"
+      />
     </div>
   );
 }

@@ -183,7 +183,6 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
       <div className="flex-1 overflow-y-auto p-5">
         {filteredOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full">
-            <div className="text-5xl mb-4">🍳</div>
             <p className="text-xl font-semibold mb-2" style={{ color: "#2C241B", fontFamily: "Playfair Display, serif" }}>Tidak ada pesanan</p>
             <p className="text-sm" style={{ color: "rgba(44,36,27,0.4)" }}>Dapur sedang tenang...</p>
           </div>

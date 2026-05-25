@@ -47,7 +47,7 @@ export async function GET(
           "Meja": o.table?.code || "-",
           "Pelanggan": o.customerName || "-",
           "Kasir": o.cashier?.name || "-",
-          "Subtotal": parseFloat(String(o.subtotalAmount)),
+          "Subtotal": parseFloat(String(o.subtotal)),
           "Pajak": parseFloat(String(o.taxAmount)),
           "Service": parseFloat(String(o.serviceAmount)),
           "Total": parseFloat(String(o.totalAmount)),
@@ -190,7 +190,7 @@ export async function GET(
         );
     }
 
-    return new Response(buffer, {
+    return new Response(new Uint8Array(buffer), {
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

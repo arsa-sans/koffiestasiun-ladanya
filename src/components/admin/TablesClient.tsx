@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Edit2, Trash2, X, Search, Users } from "lucide-react";
 import { createTable, updateTable, deleteTable } from "@/server/services/tables";
 import { toast } from "sonner";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 interface TableItem {
   id: string; code: string; name: string; capacity: number;
@@ -28,6 +29,9 @@ export default function TablesClient({ tables: init }: { tables: TableItem[] }) 
   const [fName, setFName] = useState("");
   const [fCap, setFCap] = useState(4);
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string|null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const filtered = items.filter(t => !search || t.code.toLowerCase().includes(search.toLowerCase()) || t.name.toLowerCase().includes(search.toLowerCase()));
 
   const reset = () => { setFCode(""); setFName(""); setFCap(4); setEditId(null); setShowForm(false); };
@@ -49,9 +53,19 @@ export default function TablesClient({ tables: init }: { tables: TableItem[] }) 
     } catch { toast.error("Terjadi kesalahan"); } finally { setLoading(false); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Yakin hapus meja ini?")) return;
-    try { await deleteTable(id); setItems(p => p.filter(t => t.id!==id)); toast.success("Meja dihapus"); } catch { toast.error("Gagal menghapus"); }
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return;
+    setDeleteLoading(true);
+    try {
+      await deleteTable(confirmDeleteId);
+      setItems(p => p.filter(t => t.id !== confirmDeleteId));
+      toast.success("Meja dihapus");
+    } catch {
+      toast.error("Gagal menghapus");
+    } finally {
+      setDeleteLoading(false);
+      setConfirmDeleteId(null);
+    }
   };
 
   const toggleActive = async (id: string, cur: boolean) => {
@@ -87,7 +101,7 @@ export default function TablesClient({ tables: init }: { tables: TableItem[] }) 
                 <button onClick={() => toggleActive(t.id, t.isActive)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: t.isActive ? "rgba(239,68,68,0.08)" : "rgba(16,185,129,0.08)" }}>
                   <span className="text-[10px] font-bold" style={{ color: t.isActive ? "#f87171" : "#10B981" }}>{t.isActive ? "OFF" : "ON"}</span>
                 </button>
-                <button onClick={() => handleDelete(t.id)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(239,68,68,0.08)" }}><Trash2 size={12} color="#f87171" /></button>
+                <button onClick={() => setConfirmDeleteId(t.id)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(239,68,68,0.08)" }}><Trash2 size={12} color="#f87171" /></button>
               </div>
             </motion.div>
           );
@@ -115,6 +129,18 @@ export default function TablesClient({ tables: init }: { tables: TableItem[] }) 
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={handleDelete}
+        isLoading={deleteLoading}
+        title="Hapus Meja"
+        message={`Apakah Anda yakin ingin menghapus meja ${items.find(t => t.id === confirmDeleteId)?.code || ""} (${items.find(t => t.id === confirmDeleteId)?.name || ""})? Meja ini akan dihapus secara permanen dari database.`}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        variant="danger"
+      />
     </div>
   );
 }

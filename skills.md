@@ -524,3 +524,301 @@ baru lanjut task berikutnya
 Jangan menyatakan task selesai jika masih ada error.
 
 Selalu bertindak seperti senior fullstack engineer dan system architect.
+
+========================================================
+MIDDLEWARE PROTECTION
+========================================================
+
+Wajib buat middleware.ts di root project.
+
+Proteksi rute:
+
+/admin/* → hanya role admin
+/cashier/* → hanya role cashier
+/kitchen/* → hanya role kitchen
+
+Jika belum login:
+redirect ke /login
+
+Jika role tidak sesuai:
+redirect ke /unauthorized
+
+Flow middleware:
+
+1. Ambil session dari Supabase (cookie)
+2. Jika tidak ada session → redirect /login
+3. Jika ada session → query role dari tabel users
+4. Jika role tidak cocok dengan path → redirect /unauthorized
+5. Jika cocok → lanjutkan request
+
+Gunakan:
+
+- @supabase/ssr createServerClient
+- next/server NextResponse
+- cookie-based session
+
+Jangan gunakan:
+- JWT manual
+- localStorage
+
+========================================================
+SUPABASE REALTIME
+========================================================
+
+Kitchen Display WAJIB menggunakan Supabase Realtime.
+
+Jangan gunakan:
+- polling
+- setInterval
+- manual refresh
+
+Gunakan:
+- supabase.channel()
+- .on('postgres_changes', ...)
+- subscribe ke tabel order_items
+
+Event yang di-listen:
+
+INSERT: order baru masuk
+UPDATE: status berubah (pending → cooking → ready)
+
+Saat event diterima:
+- update state lokal
+- tampilkan animasi masuk/keluar
+- play notifikasi sound (opsional)
+
+Cleanup:
+- unsubscribe saat komponen unmount
+- handle reconnect otomatis
+
+========================================================
+PWA / ANDROID WRAPPER
+========================================================
+
+Karena project akan dijadikan aplikasi Android:
+
+Fase 1 — PWA:
+
+1. Buat manifest.json:
+   - name: Koffie Station POS
+   - short_name: KoffieStation
+   - display: standalone
+   - orientation: portrait
+   - theme_color: #C08B5C
+   - background_color: #F8F5F2
+   - icons: berbagai ukuran
+
+2. Service Worker:
+   - cache static assets
+   - offline fallback page
+   - workbox strategy
+
+3. Meta tags di layout.tsx:
+   - apple-mobile-web-app-capable
+   - apple-mobile-web-app-status-bar-style
+   - viewport
+
+Fase 2 — Capacitor (opsional):
+- wrap PWA dengan Capacitor
+- native splash screen
+- push notification
+- camera access (untuk scan barcode)
+
+========================================================
+RESPONSIVE MOBILE DESIGN
+========================================================
+
+Karena target platform adalah Android:
+
+Sidebar:
+- Desktop: sidebar fixed 64px width
+- Tablet: sidebar collapsible (icon only)
+- Mobile: hamburger menu atau bottom navigation
+
+Bottom Navigation (mobile):
+- Tampilkan di mobile saja
+- Max 4-5 item
+- Kasir: Kasir, Riwayat
+- Kitchen: Display
+- Admin: Overview, Produk, Inventaris, Laporan, More
+
+Breakpoint:
+- sm: 640px
+- md: 768px
+- lg: 1024px
+- xl: 1280px
+
+Pastikan:
+- touch-friendly (min 44px tap target)
+- no horizontal scroll
+- tabel di mobile pakai card view
+- modal full-screen di mobile
+- font size readable (min 14px body)
+
+========================================================
+INVENTORY DEDUCTION FLOW
+========================================================
+
+Saat order item berubah status ke "cooking":
+
+1. Baca resep produk
+2. Untuk setiap ingredient di resep:
+   - Hitung quantity × order_item quantity
+   - Kurangi stok ingredient
+   - Catat di inventory_transactions (type: sale)
+3. Set inventoryDeducted = true pada order_item
+4. Jika stok ingredient < minStock:
+   - Log warning
+   - Update availability produk terkait
+
+Saat void/cancel:
+- Kembalikan stok ingredient
+- Catat di inventory_transactions (type: adjustment)
+- Set inventoryDeducted = false
+
+========================================================
+VOID / CANCEL ORDER
+========================================================
+
+Void Order:
+- Admin atau kasir dapat void order
+- Wajib isi alasan void
+- Catat di void_logs
+- Kembalikan stok inventory (jika sudah deducted)
+- Update status order → void
+- Update status semua item → void
+
+Cancel Item:
+- Kasir dapat cancel item individual
+- Jika item belum di-proses (pending/queued): langsung cancel
+- Jika item sudah cooking: perlu approval admin
+- Catat di void_logs
+- Kembalikan stok jika sudah deducted
+
+========================================================
+PRINT RECEIPT
+========================================================
+
+Kasir dapat print struk/receipt setelah pembayaran.
+
+Gunakan:
+- react-to-print (sudah terinstall)
+
+Format receipt:
+- Header: nama toko, alamat, nomor telepon
+- Info order: nomor order, tanggal, kasir, meja
+- Daftar item: nama, qty, harga, modifier
+- Subtotal
+- Biaya tambahan (tax, service)
+- Total
+- Metode pembayaran
+- Footer: terima kasih, website
+
+Tampilan:
+- A4 atau thermal printer 80mm
+- Font monospace untuk alignment
+
+========================================================
+DATABASE ARCHITECTURE REFERENCE
+========================================================
+
+Schema files (src/db/schema/):
+
+auth.ts:
+  - users (id, authId, name, email, role, avatarUrl, isActive)
+  - userRoleEnum: admin, cashier, kitchen
+
+restaurant.ts:
+  - diningTables (id, code, name, capacity, status, isActive)
+  - kitchenStations (id, name, type, description, isActive)
+  - tableStatusEnum: available, occupied, reserved, cleaning
+  - stationTypeEnum: bar, kitchen, sushi
+
+products.ts:
+  - categories (id, name, slug, description, imageUrl, sortOrder, isActive)
+  - products (id, categoryId, stationId, name, description, price, imageUrl, isAvailable, sortOrder)
+  - ingredients (id, name, unit, stock, minStock, costPerUnit, isActive)
+  - recipes (id, productId, ingredientId, quantity)
+
+modifiers.ts:
+  - modifierGroups (id, name, description, isRequired, isMultiple, minSelect, maxSelect, sortOrder, isActive)
+  - modifierOptions (id, groupId, name, price, sortOrder, isActive)
+  - modifierRecipes (id, modifierOptionId, ingredientId, quantity)
+  - productModifierGroups (id, productId, modifierGroupId, sortOrder)
+
+orders.ts:
+  - orders (id, orderNumber, tableId, cashierId, customerName, orderType, status, subtotal, taxAmount, serviceAmount, discountAmount, totalAmount, notes, paidAt)
+  - orderItems (id, orderId, productId, quantity, unitPrice, totalPrice, status, notes, inventoryDeducted, startedAt, completedAt)
+  - orderItemModifiers (id, orderItemId, modifierOptionId, name, price)
+  - payments (id, orderId, method, amount, reference, note)
+  - voidLogs (id, orderId, orderItemId, reason, voidedById)
+  - orderStatusEnum: open, paid, void, canceled
+  - itemStatusEnum: pending, queued, cooking, ready, delivered, canceled, void
+  - paymentMethodEnum: cash, qris, card, ewallet, transfer
+  - orderTypeEnum: dine_in, takeaway
+
+inventory.ts:
+  - inventoryTransactions (id, ingredientId, orderId, type, quantity, stockBefore, stockAfter, note, performedById)
+  - stockOpnames (id, code, status, notes, performedById, confirmedAt)
+  - stockOpnameItems (id, opnameId, ingredientId, systemStock, physicalStock, variance, note)
+  - transactionTypeEnum: purchase, sale, adjustment, waste, opname
+  - opnameStatusEnum: draft, confirmed
+
+fees.ts:
+  - additionalFees (id, name, type, value, isActive)
+  - feeTypeEnum: percentage, fixed
+
+activity-logs.ts:
+  - activityLogs (id, userId, role, activity, entityType, entityId, description, metadata, page, ipAddress, userAgent)
+
+========================================================
+IMPLEMENTATION PROGRESS TRACKING
+========================================================
+
+[x] Project Setup (Next.js 16, Drizzle, Supabase, Bun)
+[x] Database Schema (semua 9 schema files)
+[x] Database Relations (relations.ts)
+[x] Database Seed (seed.ts + seed-users.ts)
+[x] Login Page (premium UI, Sonner toast, Framer Motion)
+[x] Auth System (Supabase SSR, cookie-based)
+[x] Role-based Redirect (root page)
+[x] Unauthorized Page
+[x] Sidebar Navigation (role-based, section grouping)
+[x] Admin Overview Dashboard
+[x] Admin — CRUD Produk
+[x] Admin — CRUD Kategori
+[x] Admin — CRUD Inventaris/Bahan
+[x] Admin — CRUD Resep
+[x] Admin — CRUD Modifier
+[x] Admin — CRUD Meja
+[x] Admin — CRUD Stasiun Dapur
+[x] Admin — CRUD Biaya Tambahan
+[x] Admin — CRUD Pengguna
+[x] Admin — Activity Log
+[x] Admin — Laporan (Recharts)
+[x] Admin — Stock Opname
+[x] Admin — Export Excel
+[x] Kasir — Input Pesanan (pilih meja, menu, qty, modifier, catatan)
+[x] Kasir — Cart Panel
+[x] Kasir — Modifier Modal
+[x] Kasir — Payment Modal
+[x] Kasir — Resep Detail Modal (indikator stok)
+[x] Kasir — Table Management Modal
+[x] Kasir — Riwayat Order
+[x] Dapur — Kitchen Display System
+[ ] Middleware Route Protection
+[ ] Supabase Realtime untuk Kitchen Display
+[ ] Responsive Mobile (hamburger/bottom nav)
+[ ] PWA Manifest + Service Worker
+[ ] Session Monitoring (auto-logout, refresh)
+[ ] Supplier field di ingredients
+[ ] Dashboard Statistik Performa Dapur
+[ ] Audit: semua delete pakai custom dialog
+[ ] Audit: semua event ter-log di activity_logs
+[ ] Audit: responsive semua halaman
+[ ] Audit: loading state semua halaman
+[ ] Audit: empty state semua halaman
+[ ] Audit: build test (next build tanpa error)
+[ ] Print Receipt (react-to-print)
+[ ] Inventory deduction otomatis saat cooking
+[ ] Void/Cancel order flow lengkap

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { createFee, updateFee, deleteFee } from "@/server/services/fees";
 import { toast } from "sonner";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 interface Fee {
   id: string;
@@ -37,7 +38,9 @@ export default function FeesClient({ fees: initialFees }: FeesClientProps) {
   const [formType, setFormType] = useState<"percentage" | "fixed">("percentage");
   const [formValue, setFormValue] = useState("");
   const [loading, setLoading] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string|null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const resetForm = () => {
     setFormName("");
@@ -85,18 +88,20 @@ export default function FeesClient({ fees: initialFees }: FeesClientProps) {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id);
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return;
+    setDeleteLoading(true);
     try {
-      const result = await deleteFee(id);
+      const result = await deleteFee(confirmDeleteId);
       if (result.success) {
-        setFees((prev) => prev.filter((f) => f.id !== id));
+        setFees((prev) => prev.filter((f) => f.id !== confirmDeleteId));
         toast.success("Biaya berhasil dihapus");
       }
     } catch {
       toast.error("Gagal menghapus biaya");
     } finally {
-      setDeletingId(null);
+      setDeleteLoading(false);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -336,24 +341,31 @@ export default function FeesClient({ fees: initialFees }: FeesClientProps) {
                   <Pencil size={14} />
                 </button>
                 <button
-                  onClick={() => handleDelete(fee.id)}
-                  disabled={deletingId === fee.id}
+                  onClick={() => setConfirmDeleteId(fee.id)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{
-                    color: deletingId === fee.id ? "rgba(44,36,27,0.2)" : "#EF4444",
+                    color: "#EF4444",
                   }}
                 >
-                  {deletingId === fee.id ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Trash2 size={14} />
-                  )}
+                  <Trash2 size={14} />
                 </button>
               </div>
             </motion.div>
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={handleDelete}
+        isLoading={deleteLoading}
+        title="Hapus Biaya Tambahan"
+        message={`Apakah Anda yakin ingin menghapus biaya tambahan ${fees.find(f => f.id === confirmDeleteId)?.name || ""}? Biaya ini akan dihapus secara permanen dari database.`}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        variant="danger"
+      />
     </div>
   );
 }

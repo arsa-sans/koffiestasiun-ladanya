@@ -1,11 +1,42 @@
-// Simple stub pages for remaining admin routes
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-// app/admin/modifiers/page.tsx
-export default function ModifiersPage() {
+import { db } from "@/db";
+import { modifierGroups, modifierOptions } from "@/db/schema";
+import { asc } from "drizzle-orm";
+import ModifiersClient from "@/components/admin/ModifiersClient";
+
+export default async function ModifiersPage() {
+  const allGroups = await db.query.modifierGroups.findMany({
+    orderBy: asc(modifierGroups.sortOrder),
+    with: {
+      options: {
+        orderBy: asc(modifierOptions.sortOrder),
+      },
+    },
+  });
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4" style={{ color: "#2C241B", fontFamily: "Playfair Display, serif" }}>Modifier</h1>
-      <p style={{ color: "rgba(44,36,27,0.5)" }}>Halaman modifier grup & opsi akan tersedia setelah database dikonfigurasi.</p>
-    </div>
+    <ModifiersClient
+      groups={allGroups.map((g) => ({
+        id: g.id,
+        name: g.name,
+        description: g.description,
+        isRequired: g.isRequired,
+        isMultiple: g.isMultiple,
+        minSelect: g.minSelect,
+        maxSelect: g.maxSelect,
+        sortOrder: g.sortOrder,
+        isActive: g.isActive,
+        options: g.options.map((o) => ({
+          id: o.id,
+          groupId: o.groupId,
+          name: o.name,
+          price: String(o.price),
+          sortOrder: o.sortOrder,
+          isActive: o.isActive,
+        })),
+      }))}
+    />
   );
 }

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Edit2, Trash2, X, Search, Shield, ChefHat, CreditCard } from "lucide-react";
 import { createUser, updateUser, deleteUser } from "@/server/services/users";
 import { toast } from "sonner";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 interface UserItem {
   id: string; name: string; email: string;
@@ -27,6 +28,10 @@ export default function UsersClient({ users: init }: { users: UserItem[] }) {
   const [fName, setFName] = useState("");
   const [fEmail, setFEmail] = useState("");
   const [fRole, setFRole] = useState<"admin"|"cashier"|"kitchen">("cashier");
+  const [fPassword, setFPassword] = useState("");
+  
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string|null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const filtered = items.filter(u => {
     if (roleFilter !== "all" && u.role !== roleFilter) return false;
@@ -34,28 +39,47 @@ export default function UsersClient({ users: init }: { users: UserItem[] }) {
     return true;
   });
 
-  const reset = () => { setFName(""); setFEmail(""); setFRole("cashier"); setEditId(null); setShowForm(false); };
+  const reset = () => { setFName(""); setFEmail(""); setFPassword(""); setFRole("cashier"); setEditId(null); setShowForm(false); };
 
   const openEdit = (u: UserItem) => { setFName(u.name); setFEmail(u.email); setFRole(u.role as "admin"|"cashier"|"kitchen"); setEditId(u.id); setShowForm(true); };
 
   const handleSubmit = async () => {
     if (!fName.trim() || !fEmail.trim()) { toast.error("Nama dan email harus diisi"); return; }
+    if (!editId && !fPassword.trim()) { toast.error("Password harus diisi untuk pengguna baru"); return; }
     setLoading(true);
     try {
       if (editId) {
-        const r = await updateUser(editId, { name: fName, email: fEmail, role: fRole });
+        const payload: any = { name: fName, email: fEmail, role: fRole };
+        if (fPassword.trim()) {
+          payload.password = fPassword.trim();
+        }
+        const r = await updateUser(editId, payload);
         if (r.success) { setItems(p => p.map(u => u.id===editId ? { ...u, name: fName, email: fEmail, role: fRole } : u)); toast.success("Pengguna diperbarui"); }
       } else {
-        const r = await createUser({ name: fName, email: fEmail, role: fRole });
+        const r = await createUser({ name: fName, email: fEmail, role: fRole, password: fPassword.trim() });
         if (r.success && r.data) { setItems(p => [...p, { id: r.data.id, name: r.data.name, email: r.data.email, role: r.data.role, isActive: r.data.isActive, createdAt: r.data.createdAt.toISOString() }]); toast.success("Pengguna ditambahkan"); }
       }
       reset();
-    } catch { toast.error("Terjadi kesalahan"); } finally { setLoading(false); }
+    } catch (e: any) {
+      toast.error(e.message || "Terjadi kesalahan");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Yakin hapus pengguna ini?")) return;
-    try { await deleteUser(id); setItems(p => p.filter(u => u.id!==id)); toast.success("Pengguna dihapus"); } catch { toast.error("Gagal menghapus"); }
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return;
+    setDeleteLoading(true);
+    try {
+      await deleteUser(confirmDeleteId);
+      setItems(p => p.filter(u => u.id !== confirmDeleteId));
+      toast.success("Pengguna dihapus");
+    } catch {
+      toast.error("Gagal menghapus");
+    } finally {
+      setDeleteLoading(false);
+      setConfirmDeleteId(null);
+    }
   };
 
   const toggleActive = async (id: string, cur: string) => {
@@ -108,7 +132,7 @@ export default function UsersClient({ users: init }: { users: UserItem[] }) {
                   <td>
                     <div className="flex gap-2">
                       <button onClick={() => openEdit(u)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(192,139,92,0.1)" }}><Edit2 size={13} color="#C08B5C" /></button>
-                      <button onClick={() => handleDelete(u.id)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(239,68,68,0.08)" }}><Trash2 size={13} color="#f87171" /></button>
+                      <button onClick={() => setConfirmDeleteId(u.id)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(239,68,68,0.08)" }}><Trash2 size={13} color="#f87171" /></button>
                     </div>
                   </td>
                 </tr>
@@ -130,6 +154,19 @@ export default function UsersClient({ users: init }: { users: UserItem[] }) {
               <div className="space-y-4">
                 <div><label className="block text-sm font-medium mb-1.5" style={{ color: "rgba(44,36,27,0.7)" }}>Nama</label><input type="text" value={fName} onChange={e => setFName(e.target.value)} placeholder="Nama lengkap" className="pos-input" style={{ fontSize: "13px" }} /></div>
                 <div><label className="block text-sm font-medium mb-1.5" style={{ color: "rgba(44,36,27,0.7)" }}>Email</label><input type="email" value={fEmail} onChange={e => setFEmail(e.target.value)} placeholder="email@example.com" className="pos-input" style={{ fontSize: "13px" }} /></div>
+                <div>
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: "rgba(44,36,27,0.7)" }}>
+                    {editId ? "Password (Kosongkan jika tidak diubah)" : "Password"}
+                  </label>
+                  <input
+                    type="password"
+                    value={fPassword}
+                    onChange={e => setFPassword(e.target.value)}
+                    placeholder={editId ? "••••••••" : "Masukkan password"}
+                    className="pos-input"
+                    style={{ fontSize: "13px" }}
+                  />
+                </div>
                 <div><label className="block text-sm font-medium mb-1.5" style={{ color: "rgba(44,36,27,0.7)" }}>Role</label><select value={fRole} onChange={e => setFRole(e.target.value as "admin"|"cashier"|"kitchen")} className="pos-input" style={{ fontSize: "13px" }}><option value="admin">Admin</option><option value="cashier">Kasir</option><option value="kitchen">Kitchen</option></select></div>
               </div>
               <div className="flex gap-3 mt-6">
@@ -140,6 +177,18 @@ export default function UsersClient({ users: init }: { users: UserItem[] }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={handleDelete}
+        isLoading={deleteLoading}
+        title="Hapus Pengguna"
+        message={`Apakah Anda yakin ingin menghapus pengguna ${items.find(u => u.id === confirmDeleteId)?.name || ""}? Pengguna ini akan dihapus secara permanen dari database.`}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        variant="danger"
+      />
     </div>
   );
 }

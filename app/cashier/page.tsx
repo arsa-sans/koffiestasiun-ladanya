@@ -9,9 +9,13 @@ import { eq, asc } from "drizzle-orm";
 import CashierClient from "@/components/cashier/CashierClient";
 
 export default async function CashierPage() {
-  const [categories, products, tables] = await Promise.all([
+  const [categories, productsData, tables] = await Promise.all([
     getCategories(),
-    getProducts(),
+    db.query.products.findMany({
+      where: (p, { eq }) => eq(p.isAvailable, true),
+      orderBy: (p, { asc }) => [asc(p.sortOrder)],
+      with: { station: true },
+    }),
     db.select({ id: diningTables.id, code: diningTables.code, name: diningTables.name })
       .from(diningTables)
       .where(eq(diningTables.isActive, true))
@@ -21,11 +25,17 @@ export default async function CashierPage() {
   return (
     <CashierClient
       categories={categories}
-      products={products.map((p) => ({
-        ...p,
+      products={productsData.map((p) => ({
+        id: p.id,
+        name: p.name,
         price: String(p.price),
         description: p.description ?? null,
         imageUrl: p.imageUrl ?? null,
+        isAvailable: p.isAvailable,
+        categoryId: p.categoryId,
+        stationId: p.stationId,
+        stationName: p.station?.name ?? null,
+        stationType: p.station?.type ?? null,
       }))}
       tables={tables}
     />

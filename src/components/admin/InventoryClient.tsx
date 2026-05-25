@@ -8,6 +8,7 @@ import { Package, AlertTriangle, Plus, Edit2, Trash2, X, History, FileSpreadshee
 import { formatCurrency, formatDateTime } from "@/lib/utils/format";
 import { adjustStock, createIngredient, updateIngredient, deleteIngredient } from "@/server/services/inventory";
 import { toast } from "sonner";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 interface Ingredient {
   id: string; name: string; unit: string; stock: string; minStock: string;
@@ -39,6 +40,9 @@ export default function InventoryClient({ ingredients: initIng, transactions: in
   const [fMinStock, setFMinStock] = useState("0");
   const [fCost, setFCost] = useState("0");
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string|null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   const lowStockItems = items.filter(i => i.isLow);
 
   const reset = () => { setFName(""); setFUnit(""); setFStock("0"); setFMinStock("0"); setFCost("0"); setEditId(null); setShowForm(false); };
@@ -67,9 +71,19 @@ export default function InventoryClient({ ingredients: initIng, transactions: in
     } catch { toast.error("Terjadi kesalahan"); } finally { setLoading(false); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Yakin hapus bahan ini?")) return;
-    try { await deleteIngredient(id); setItems(p => p.filter(i => i.id!==id)); toast.success("Bahan dihapus"); } catch { toast.error("Gagal menghapus"); }
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return;
+    setDeleteLoading(true);
+    try {
+      await deleteIngredient(confirmDeleteId);
+      setItems(p => p.filter(i => i.id !== confirmDeleteId));
+      toast.success("Bahan dihapus");
+    } catch {
+      toast.error("Gagal menghapus");
+    } finally {
+      setDeleteLoading(false);
+      setConfirmDeleteId(null);
+    }
   };
 
   const handleAdjust = async (ingredientId: string, type: "purchase"|"adjustment"|"waste") => {
@@ -144,7 +158,7 @@ export default function InventoryClient({ ingredients: initIng, transactions: in
                       <div className="flex gap-1.5">
                         <button onClick={() => setAdjustingId(adjustingId===ing.id ? null : ing.id)} className="text-xs px-3 py-1.5 rounded-lg font-medium" style={{ background: "rgba(192,139,92,0.12)", color: "#C08B5C", border: "1px solid rgba(192,139,92,0.2)" }}>Sesuaikan</button>
                         <button onClick={() => openEdit(ing)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(192,139,92,0.1)" }}><Edit2 size={12} color="#C08B5C" /></button>
-                        <button onClick={() => handleDelete(ing.id)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(239,68,68,0.08)" }}><Trash2 size={12} color="#f87171" /></button>
+                        <button onClick={() => setConfirmDeleteId(ing.id)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "rgba(239,68,68,0.08)" }}><Trash2 size={12} color="#f87171" /></button>
                       </div>
                     </td>
                   </tr>
@@ -223,6 +237,18 @@ export default function InventoryClient({ ingredients: initIng, transactions: in
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={handleDelete}
+        isLoading={deleteLoading}
+        title="Hapus Bahan Baku"
+        message={`Apakah Anda yakin ingin menghapus bahan baku ${items.find(i => i.id === confirmDeleteId)?.name || ""}? Bahan baku ini akan dihapus secara permanen dari database.`}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        variant="danger"
+      />
     </div>
   );
 }

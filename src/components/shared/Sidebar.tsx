@@ -13,8 +13,6 @@ import {
   Users,
   UtensilsCrossed,
   TableProperties,
-  FlaskConical,
-  Settings,
   LogOut,
   Sliders,
   Receipt,
@@ -48,7 +46,6 @@ const adminNav: NavItem[] = [
   { href: "/admin/reports", icon: <BarChart3 size={20} />, label: "Laporan" },
   { href: "/admin/products", icon: <Coffee size={20} />, label: "Produk", section: "Katalog" },
   { href: "/admin/categories", icon: <UtensilsCrossed size={20} />, label: "Kategori" },
-  { href: "/admin/recipes", icon: <FlaskConical size={20} />, label: "Resep" },
   { href: "/admin/modifiers", icon: <Sliders size={20} />, label: "Modifier" },
   { href: "/admin/inventory", icon: <Package size={20} />, label: "Inventaris", section: "Stok" },
   { href: "/admin/stock-opname", icon: <ClipboardList size={20} />, label: "Stock Opname" },
@@ -65,17 +62,17 @@ const navMap = {
   admin: adminNav,
 };
 
-const roleLabels = {
+const roleLabels: Record<string, string> = {
   cashier: "Kasir",
   kitchen: "Dapur",
   admin: "Admin",
 };
 
-const roleSwitcher = [
-  { href: "/cashier", icon: <Coffee size={16} />, label: "Kasir" },
-  { href: "/kitchen", icon: <ChefHat size={16} />, label: "Dapur" },
-  { href: "/admin", icon: <Settings size={16} />, label: "Admin" },
-];
+const roleIcons: Record<string, React.ReactNode> = {
+  cashier: <Coffee size={14} />,
+  kitchen: <ChefHat size={14} />,
+  admin: <LayoutDashboard size={14} />,
+};
 
 export default function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
@@ -120,29 +117,22 @@ export default function Sidebar({ role }: SidebarProps) {
         </div>
       </div>
 
-      {/* Role Switcher */}
+      {/* Role Badge */}
       <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.04)" }}>
         <div
-          className="flex rounded-xl overflow-hidden"
-          style={{ background: "rgba(0,0,0,0.03)", border: "1px solid rgba(0,0,0,0.06)" }}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl"
+          style={{
+            background: "rgba(192,139,92,0.08)",
+            border: "1px solid rgba(192,139,92,0.15)",
+          }}
         >
-          {roleSwitcher.map((r) => {
-            const isActive = pathname.startsWith(r.href);
-            return (
-              <Link
-                key={r.href}
-                href={r.href}
-                className="flex-1 flex flex-col items-center gap-1 py-2 transition-all text-xs"
-                style={{
-                  color: isActive ? "#C08B5C" : "rgba(44,36,27,0.4)",
-                  background: isActive ? "rgba(192,139,92,0.12)" : "transparent",
-                }}
-              >
-                {r.icon}
-                <span>{r.label}</span>
-              </Link>
-            );
-          })}
+          <span style={{ color: "#C08B5C" }}>{roleIcons[role]}</span>
+          <span
+            className="text-xs font-semibold uppercase tracking-wider"
+            style={{ color: "#C08B5C" }}
+          >
+            {roleLabels[role]}
+          </span>
         </div>
       </div>
 

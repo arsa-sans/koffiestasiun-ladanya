@@ -6,6 +6,7 @@ import { Plus, Edit2, Trash2, X, Zap } from "lucide-react";
 import { createStation, updateStation, deleteStation } from "@/server/services/stations";
 import { toast } from "sonner";
 import { STATION_LABELS, STATION_COLORS } from "@/constants";
+import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 interface StationItem {
   id: string; name: string; type: "bar"|"kitchen"|"sushi";
@@ -20,6 +21,9 @@ export default function StationsClient({ stations: init }: { stations: StationIt
   const [fName, setFName] = useState("");
   const [fType, setFType] = useState<"bar"|"kitchen"|"sushi">("bar");
   const [fDesc, setFDesc] = useState("");
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string|null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const reset = () => { setFName(""); setFType("bar"); setFDesc(""); setEditId(null); setShowForm(false); };
 
@@ -40,11 +44,19 @@ export default function StationsClient({ stations: init }: { stations: StationIt
     } catch { toast.error("Terjadi kesalahan"); } finally { setLoading(false); }
   };
 
-  const handleDelete = async (id: string) => {
-    const s = items.find(x => x.id===id);
-    if (s && s.productCount > 0) { toast.error("Tidak bisa hapus stasiun yang punya produk"); return; }
-    if (!confirm("Yakin hapus stasiun ini?")) return;
-    try { await deleteStation(id); setItems(p => p.filter(x => x.id!==id)); toast.success("Berhasil dihapus"); } catch { toast.error("Gagal menghapus"); }
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return;
+    setDeleteLoading(true);
+    try {
+      await deleteStation(confirmDeleteId);
+      setItems(p => p.filter(x => x.id !== confirmDeleteId));
+      toast.success("Berhasil dihapus");
+    } catch {
+      toast.error("Gagal menghapus");
+    } finally {
+      setDeleteLoading(false);
+      setConfirmDeleteId(null);
+    }
   };
 
   const toggleActive = async (id: string, cur: boolean) => {
@@ -80,7 +92,19 @@ export default function StationsClient({ stations: init }: { stations: StationIt
                 <span className="text-xs" style={{ color: "rgba(44,36,27,0.4)" }}>{st.productCount} produk</span>
                 <div className="flex gap-2">
                   <button onClick={() => openEdit(st)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(192,139,92,0.1)" }}><Edit2 size={13} color="#C08B5C" /></button>
-                  <button onClick={() => handleDelete(st.id)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(239,68,68,0.08)" }}><Trash2 size={13} color="#f87171" /></button>
+                  <button
+                    onClick={() => {
+                      if (st.productCount > 0) {
+                        toast.error("Tidak bisa hapus stasiun yang punya produk");
+                        return;
+                      }
+                      setConfirmDeleteId(st.id);
+                    }}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ background: "rgba(239,68,68,0.08)" }}
+                  >
+                    <Trash2 size={13} color="#f87171" />
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -109,6 +133,18 @@ export default function StationsClient({ stations: init }: { stations: StationIt
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={handleDelete}
+        isLoading={deleteLoading}
+        title="Hapus Stasiun"
+        message={`Apakah Anda yakin ingin menghapus stasiun ${items.find(x => x.id === confirmDeleteId)?.name || ""}? Stasiun ini akan dihapus secara permanen dari database.`}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        variant="danger"
+      />
     </div>
   );
 }

@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 
 interface Category { id: string; name: string; slug: string }
-interface Product { id: string; name: string; description?: string | null; price: string; imageUrl?: string | null; isAvailable: boolean; categoryId?: string; stationId?: string }
+interface Product { id: string; name: string; description?: string | null; price: string; imageUrl?: string | null; isAvailable: boolean; categoryId?: string; stationId?: string; stationName?: string | null; stationType?: string | null }
 interface ModifierGroup { id: string; name: string; isRequired: boolean; isMultiple: boolean; minSelect: number; maxSelect: number; options: { id: string; name: string; price: string }[] }
 
 interface CashierClientProps {

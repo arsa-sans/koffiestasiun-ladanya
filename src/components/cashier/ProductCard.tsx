@@ -14,6 +14,8 @@ interface Product {
   isAvailable: boolean;
   categoryId?: string;
   stationId?: string;
+  stationName?: string | null;
+  stationType?: string | null;
 }
 
 interface ProductCardProps {
@@ -23,6 +25,15 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onSelect, onViewRecipe }: ProductCardProps) {
+  const fallbackImage = (() => {
+    const type = product.stationType?.toLowerCase() || "";
+    const name = product.stationName?.toLowerCase() || "";
+    if (type === "bar" || name.includes("bar") || name.includes("coffee") || name.includes("kopi")) {
+      return "/koffie.png";
+    }
+    return "/ladanya.png";
+  })();
+
   return (
     <motion.div
       whileHover={{ y: -3, scale: 1.01 }}
@@ -40,22 +51,13 @@ export default function ProductCard({ product, onSelect, onViewRecipe }: Product
         className="relative w-full"
         style={{ paddingTop: "60%", background: "#FFFFFF" }}
       >
-        {product.imageUrl ? (
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 50vw, 33vw"
-          />
-        ) : (
-          <div
-            className="absolute inset-0 flex items-center justify-center text-4xl"
-            style={{ background: "rgba(192,139,92,0.06)" }}
-          >
-            ☕
-          </div>
-        )}
+        <Image
+          src={product.imageUrl || fallbackImage}
+          alt={product.name}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 50vw, 33vw"
+        />
 
         {!product.isAvailable && (
           <div
