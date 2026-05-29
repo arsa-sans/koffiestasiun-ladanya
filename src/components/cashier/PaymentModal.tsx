@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CreditCard, QrCode, Wallet, Banknote, Building2, Plus, Trash2, CheckCircle } from "lucide-react";
+import { X, CreditCard, QrCode, Wallet, Banknote, Building2, Plus, Trash2, CheckCircle, Printer } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 import { PAYMENT_METHOD_LABELS } from "@/constants";
 import { processPayment, type PaymentEntry } from "@/server/actions/payments";
+import { getOrderReceipt } from "@/server/actions/orders";
 import { toast } from "sonner";
+import { useReactToPrint } from "react-to-print";
+import Receipt, { type ReceiptData } from "./Receipt";
 
 interface PaymentModalProps {
   orderId: string;
@@ -29,6 +32,13 @@ export default function PaymentModal({ orderId, totalAmount, onClose, onSuccess 
   ]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
+
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const handlePrint = useReactToPrint({
+    contentRef: receiptRef,
+    documentTitle: `Struk_${orderId}`,
+  });
 
   const totalPaid = entries.reduce((s, e) => s + e.amount, 0);
   const remaining = totalAmount - totalPaid;
@@ -56,8 +66,15 @@ export default function PaymentModal({ orderId, totalAmount, onClose, onSuccess 
     setLoading(true);
     const result = await processPayment(orderId, entries);
     if (result.success) {
+      try {
+        const orderData = await getOrderReceipt(orderId);
+        if (orderData) {
+          setReceiptData(orderData as unknown as ReceiptData);
+        }
+      } catch (err) {
+        console.error("Failed to load receipt", err);
+      }
       setSuccess(true);
-      setTimeout(() => { onSuccess(); }, 1800);
     } else {
       toast.error("Pembayaran gagal");
       setLoading(false);
@@ -66,15 +83,41 @@ export default function PaymentModal({ orderId, totalAmount, onClose, onSuccess 
 
   if (success) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.8)" }}>
-        <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.8)" }}>
+        <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-6 bg-white p-8 rounded-3xl max-w-sm w-full">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
             className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: "rgba(16,185,129,0.15)", border: "2px solid #10B981" }}>
             <CheckCircle size={48} color="#10B981" />
           </motion.div>
-          <p className="text-2xl font-bold" style={{ color: "#2C241B", fontFamily: "Playfair Display, serif" }}>Pembayaran Berhasil!</p>
-          <p style={{ color: "#10B981" }}>{formatCurrency(totalAmount)}</p>
+          <div className="text-center">
+            <p className="text-2xl font-bold mb-1" style={{ color: "#2C241B", fontFamily: "Playfair Display, serif" }}>Pembayaran Berhasil!</p>
+            <p style={{ color: "#10B981", fontSize: "18px", fontWeight: "bold" }}>{formatCurrency(totalAmount)}</p>
+          </div>
+          
+          <div className="flex flex-col w-full gap-3 mt-2">
+            <button
+              onClick={() => handlePrint()}
+              disabled={!receiptData}
+              className="w-full py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all"
+              style={{ background: "#C08B5C", color: "#FFFFFF", opacity: receiptData ? 1 : 0.7 }}
+            >
+              <Printer size={18} />
+              Cetak Struk
+            </button>
+            <button
+              onClick={onSuccess}
+              className="w-full py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all"
+              style={{ background: "rgba(0,0,0,0.05)", color: "#2C241B" }}
+            >
+              Selesai
+            </button>
+          </div>
         </motion.div>
+        
+        {/* Hidden Receipt */}
+        <div style={{ display: "none" }}>
+          {receiptData && <Receipt ref={receiptRef} data={receiptData} />}
+        </div>
       </div>
     );
   }

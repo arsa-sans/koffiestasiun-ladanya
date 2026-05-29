@@ -23,6 +23,7 @@ interface CashierClientProps {
   tables: { id: string; code: string; name: string }[];
 }
 
+
 export default function CashierClient({ categories, products, tables }: CashierClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [search, setSearch] = useState("");

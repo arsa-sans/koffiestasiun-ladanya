@@ -39,7 +39,7 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
 
   // Live clock
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 30000);
+    const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
@@ -130,7 +130,13 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
     }))
     .filter((order) => order.items.length > 0);
 
-  const getElapsed = (dateStr: string) => Math.floor((now.getTime() - new Date(dateStr).getTime()) / 60000);
+  const getElapsedMins = (dateStr: string) => Math.floor((now.getTime() - new Date(dateStr).getTime()) / 60000);
+  const getElapsedFormatted = (dateStr: string) => {
+    const diff = Math.max(0, now.getTime() - new Date(dateStr).getTime());
+    const m = Math.floor(diff / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   const elapsedColor = (mins: number) => {
     if (mins < 5) return "#10B981";
@@ -190,7 +196,8 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" style={{ alignItems: "start" }}>
             <AnimatePresence>
               {filteredOrders.map((order) => {
-                const elapsed = getElapsed(order.createdAt);
+                const elapsedMins = getElapsedMins(order.createdAt);
+                const elapsedFormatted = getElapsedFormatted(order.createdAt);
                 const primaryStatus = order.items[0]?.status || "pending";
                 const statusBarColor = primaryStatus === "cooking" ? "#3B82F6"
                   : primaryStatus === "ready" ? "#10B981"
@@ -220,9 +227,9 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
                           : <p className="text-xs" style={{ color: "rgba(44,36,27,0.45)" }}>Meja {order.table!.code}</p>
                         }
                       </div>
-                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: `${elapsedColor(elapsed)}12` }}>
-                        <Clock size={11} color={elapsedColor(elapsed)} />
-                        <span className="text-xs font-bold" style={{ color: elapsedColor(elapsed) }}>{elapsed}m</span>
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: `${elapsedColor(elapsedMins)}12` }}>
+                        <Clock size={11} color={elapsedColor(elapsedMins)} />
+                        <span className="text-xs font-bold font-mono" style={{ color: elapsedColor(elapsedMins) }}>{elapsedFormatted}</span>
                       </div>
                     </div>
 
@@ -261,9 +268,9 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
                               <div className="text-[11px] flex items-center gap-1 mb-2" style={{ color: "rgba(44,36,27,0.45)" }}>
                                 <Clock size={10} />
                                 {item.completedAt ? (
-                                  <span>Selesai dalam {Math.ceil((new Date(item.completedAt).getTime() - new Date(item.startedAt).getTime()) / 60000)} menit</span>
+                                  <span>Selesai dalam {getElapsedFormatted(item.startedAt)}</span>
                                 ) : (
-                                  <span>Memasak {Math.max(1, Math.floor((now.getTime() - new Date(item.startedAt).getTime()) / 60000))} menit...</span>
+                                  <span className="font-mono">Memasak {getElapsedFormatted(item.startedAt)}</span>
                                 )}
                               </div>
                             )}

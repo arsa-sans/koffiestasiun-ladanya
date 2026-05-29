@@ -109,7 +109,8 @@ async function getUserRoleFromDB(
     `;
     await sql.end();
     return result[0]?.role || null;
-  } catch {
+  } catch (err) {
+    console.error("getUserRoleFromDB error:", err);
     return null;
   }
 }

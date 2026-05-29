@@ -135,5 +135,24 @@ export async function voidOrder(orderId: string, reason: string, userId?: string
   return { success: true };
 }
 
+export async function getOrderReceipt(orderId: string) {
+  const order = await db.query.orders.findFirst({
+    where: eq(orders.id, orderId),
+    with: {
+      table: true,
+      cashier: true,
+      items: {
+        with: {
+          product: true,
+          modifiers: true,
+        },
+      },
+      payments: true,
+    },
+  });
+
+  return order;
+}
+
 // Import missing
 import { eq } from "drizzle-orm";
