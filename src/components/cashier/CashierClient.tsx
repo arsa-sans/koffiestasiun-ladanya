@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Settings2 } from "lucide-react";
 import ProductCard from "@/components/cashier/ProductCard";
@@ -14,17 +14,21 @@ import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 
 interface Category { id: string; name: string; slug: string }
-interface Product { id: string; name: string; description?: string | null; price: string; imageUrl?: string | null; isAvailable: boolean; categoryId?: string; stationId?: string; stationName?: string | null; stationType?: string | null }
+// Full product type (from server, used in ProductCard)
+interface Product { id: string; name: string; description?: string | null; price: string; imageUrl?: string | null; isAvailable: boolean; categoryId?: string; stationId?: string; stationName?: string | null; stationType?: string | null; maxStock?: number | null; recipes?: { ingredientId: string; quantity: number }[]; }
+// Minimal product type returned by ModifierModal's onConfirm callback
+interface BaseProduct { id: string; name: string; price: string; imageUrl?: string | null; isAvailable?: boolean; categoryId?: string; stationId?: string; maxStock?: number | null; recipes?: { ingredientId: string; quantity: number }[]; }
 interface ModifierGroup { id: string; name: string; isRequired: boolean; isMultiple: boolean; minSelect: number; maxSelect: number; options: { id: string; name: string; price: string }[] }
 
 interface CashierClientProps {
   categories: Category[];
+  initialIngredients: Record<string, number>;
   products: Product[];
   tables: { id: string; code: string; name: string }[];
 }
 
 
-export default function CashierClient({ categories, products, tables }: CashierClientProps) {
+export default function CashierClient({ categories, initialIngredients, products, tables }: CashierClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
@@ -40,7 +44,45 @@ export default function CashierClient({ categories, products, tables }: CashierC
   const [showTableManager, setShowTableManager] = useState(false);
   const [localTables, setLocalTables] = useState(tables);
 
-  const filteredProducts = products.filter((p) => {
+  // Dynamic Stock Calculation
+  const remainingIngredients = useMemo(() => {
+    const usage: Record<string, number> = {};
+    cartItems.forEach(item => {
+      // Find the base product to get its recipes
+      const product = products.find(p => p.id === item.productId);
+      if (product && product.recipes) {
+        product.recipes.forEach(r => {
+          usage[r.ingredientId] = (usage[r.ingredientId] || 0) + (r.quantity * item.quantity);
+        });
+      }
+    });
+
+    const remaining: Record<string, number> = { ...initialIngredients };
+    for (const [id, used] of Object.entries(usage)) {
+      if (remaining[id] !== undefined) {
+        remaining[id] -= used;
+      }
+    }
+    return remaining;
+  }, [cartItems, initialIngredients, products]);
+
+  const dynamicProducts = useMemo(() => {
+    return products.map(p => {
+      let maxStock: number | null = null;
+      if (p.recipes && p.recipes.length > 0) {
+        maxStock = Math.min(
+          ...p.recipes.map(r => {
+            const currentRemaining = remainingIngredients[r.ingredientId] || 0;
+            return Math.floor(currentRemaining / r.quantity);
+          })
+        );
+        if (maxStock < 0 || isNaN(maxStock)) maxStock = 0;
+      }
+      return { ...p, maxStock };
+    });
+  }, [products, remainingIngredients]);
+
+  const filteredProducts = dynamicProducts.filter((p) => {
     if (selectedCategory !== "all" && p.categoryId !== selectedCategory) return false;
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
@@ -58,24 +100,67 @@ export default function CashierClient({ categories, products, tables }: CashierC
     setModifierProduct(product);
   };
 
-  const addToCart = useCallback((product: { id: string; name: string; price: string }, qty: number, modifiers: SelectedModifier[], notes: string) => {
-    setCartItems((prev) => [
-      ...prev,
-      {
-        id: uuidv4(),
-        productId: product.id,
-        productName: product.name,
-        quantity: qty,
-        unitPrice: parseFloat(product.price),
-        modifiers,
-        notes,
-      },
-    ]);
-    toast.success(`${product.name} ditambahkan`);
-  }, []);
+  const addToCart = useCallback((product: BaseProduct, qty: number, modifiers: SelectedModifier[], notes: string) => {
+    setCartItems((prev) => {
+      // Find dynamic maxStock (which already accounts for cart usage)
+      const dynamicProd = dynamicProducts.find(p => p.id === product.id);
+      
+      const availableToAdd = dynamicProd?.maxStock !== null && dynamicProd?.maxStock !== undefined
+        ? dynamicProd.maxStock
+        : Infinity;
+        
+      const finalQty = Math.min(qty, availableToAdd);
+      
+      if (finalQty <= 0) {
+        toast.error(`Stok ${product.name} tidak mencukupi`);
+        return prev;
+      }
+
+      toast.success(`${product.name} ditambahkan`);
+      return [
+        ...prev,
+        {
+          id: uuidv4(),
+          productId: product.id,
+          productName: product.name,
+          quantity: finalQty,
+          unitPrice: parseFloat(product.price),
+          modifiers,
+          notes,
+          maxStock: dynamicProd?.maxStock !== null && dynamicProd?.maxStock !== undefined ? finalQty + dynamicProd.maxStock : null, // Store total potential max for this variant
+        },
+      ];
+    });
+  }, [dynamicProducts]);
 
   const updateQty = (id: string, qty: number) => {
-    setCartItems((prev) => prev.map((i) => (i.id === id ? { ...i, quantity: qty } : i)));
+    setCartItems((prev) => {
+      const item = prev.find(i => i.id === id);
+      if (!item) return prev;
+      
+      const dynamicProd = dynamicProducts.find(p => p.id === item.productId);
+      
+      const availableToAdd = dynamicProd?.maxStock !== null && dynamicProd?.maxStock !== undefined
+        ? dynamicProd.maxStock
+        : Infinity;
+      
+      // If we are increasing quantity, check if we have enough stock left
+      // If we are decreasing, we don't need to check
+      const qtyDiff = qty - item.quantity;
+      const finalQty = qtyDiff > 0 
+        ? item.quantity + Math.min(qtyDiff, availableToAdd)
+        : qty;
+        
+      if (qtyDiff > 0 && qtyDiff > availableToAdd) {
+        toast.error(`Stok tersisa maksimal ${item.quantity + availableToAdd} porsi`);
+      }
+      
+      return prev.map((i) => (i.id === id ? { 
+        ...i, 
+        quantity: finalQty,
+        maxStock: dynamicProd?.maxStock !== null && dynamicProd?.maxStock !== undefined ? finalQty + dynamicProd.maxStock : null,
+      } : i));
+    });
   };
 
   const removeItem = (id: string) => {
@@ -176,7 +261,7 @@ export default function CashierClient({ categories, products, tables }: CashierC
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             <AnimatePresence>
               {filteredProducts.map((product, i) => (
-                <motion.div key={product.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+                <motion.div key={product.id} initial={false} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
                   <ProductCard product={product} onSelect={handleProductClick} onViewRecipe={(id) => setRecipeProductId(id)} />
                 </motion.div>
               ))}
@@ -192,7 +277,19 @@ export default function CashierClient({ categories, products, tables }: CashierC
       </div>
 
       {/* Cart Panel */}
-      <CartPanel items={cartItems} customerName={customerName} notes={orderNotes}
+      <CartPanel 
+        items={cartItems.map(item => {
+          const dynamicProd = dynamicProducts.find(p => p.id === item.productId);
+          return {
+            ...item,
+            // The max stock for this specific line item is its current quantity + whatever is still available
+            maxStock: dynamicProd?.maxStock !== null && dynamicProd?.maxStock !== undefined 
+              ? item.quantity + dynamicProd.maxStock 
+              : null
+          };
+        })} 
+        customerName={customerName} 
+        notes={orderNotes}
         onUpdateQty={updateQty} onRemove={removeItem}
         onCustomerNameChange={setCustomerName} onNotesChange={setOrderNotes}
         onCheckout={handleCheckout} />

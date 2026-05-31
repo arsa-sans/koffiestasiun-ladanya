@@ -24,6 +24,7 @@ export default async function InventoryPage() {
         stock: String(i.stock),
         minStock: String(i.minStock),
         costPerUnit: String(i.costPerUnit),
+        supplier: i.supplier || "",
         isActive: i.isActive,
         isLow: parseFloat(String(i.stock)) <= parseFloat(String(i.minStock)) * 1.2,
       }))}

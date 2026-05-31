@@ -12,7 +12,7 @@ import ConfirmDialog from "@/components/shared/ConfirmDialog";
 
 interface Ingredient {
   id: string; name: string; unit: string; stock: string; minStock: string;
-  costPerUnit: string; isActive: boolean; isLow: boolean;
+  costPerUnit: string; supplier: string; isActive: boolean; isLow: boolean;
 }
 interface Transaction {
   id: string; ingredientName: string; unit: string; type: string;
@@ -39,31 +39,32 @@ export default function InventoryClient({ ingredients: initIng, transactions: in
   const [fStock, setFStock] = useState("0");
   const [fMinStock, setFMinStock] = useState("0");
   const [fCost, setFCost] = useState("0");
+  const [fSupplier, setFSupplier] = useState("");
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string|null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const lowStockItems = items.filter(i => i.isLow);
 
-  const reset = () => { setFName(""); setFUnit(""); setFStock("0"); setFMinStock("0"); setFCost("0"); setEditId(null); setShowForm(false); };
+  const reset = () => { setFName(""); setFUnit(""); setFStock("0"); setFMinStock("0"); setFCost("0"); setFSupplier(""); setEditId(null); setShowForm(false); };
 
-  const openEdit = (i: Ingredient) => { setFName(i.name); setFUnit(i.unit); setFStock(i.stock); setFMinStock(i.minStock); setFCost(i.costPerUnit); setEditId(i.id); setShowForm(true); };
+  const openEdit = (i: Ingredient) => { setFName(i.name); setFUnit(i.unit); setFStock(i.stock); setFMinStock(i.minStock); setFCost(i.costPerUnit); setFSupplier(i.supplier); setEditId(i.id); setShowForm(true); };
 
   const handleSubmit = async () => {
     if (!fName.trim() || !fUnit.trim()) { toast.error("Nama dan satuan harus diisi"); return; }
     setLoading(true);
     try {
       if (editId) {
-        const r = await updateIngredient(editId, { name: fName, unit: fUnit, minStock: fMinStock, costPerUnit: fCost });
+        const r = await updateIngredient(editId, { name: fName, unit: fUnit, minStock: fMinStock, costPerUnit: fCost, supplier: fSupplier });
         if (r.success) {
-          setItems(p => p.map(i => i.id===editId ? { ...i, name: fName, unit: fUnit, minStock: fMinStock, costPerUnit: fCost, isLow: parseFloat(i.stock) <= parseFloat(fMinStock)*1.2 } : i));
+          setItems(p => p.map(i => i.id===editId ? { ...i, name: fName, unit: fUnit, minStock: fMinStock, costPerUnit: fCost, supplier: fSupplier, isLow: parseFloat(i.stock) <= parseFloat(fMinStock)*1.2 } : i));
           toast.success("Bahan diperbarui");
         }
       } else {
-        const r = await createIngredient({ name: fName, unit: fUnit, stock: fStock, minStock: fMinStock, costPerUnit: fCost });
+        const r = await createIngredient({ name: fName, unit: fUnit, stock: fStock, minStock: fMinStock, costPerUnit: fCost, supplier: fSupplier });
         if (r.success && r.data) {
           const d = r.data;
-          setItems(p => [...p, { id: d.id, name: d.name, unit: d.unit, stock: String(d.stock), minStock: String(d.minStock), costPerUnit: String(d.costPerUnit), isActive: d.isActive, isLow: parseFloat(String(d.stock)) <= parseFloat(String(d.minStock))*1.2 }]);
+          setItems(p => [...p, { id: d.id, name: d.name, unit: d.unit, stock: String(d.stock), minStock: String(d.minStock), costPerUnit: String(d.costPerUnit), supplier: d.supplier || "", isActive: d.isActive, isLow: parseFloat(String(d.stock)) <= parseFloat(String(d.minStock))*1.2 }]);
           toast.success("Bahan ditambahkan");
         }
       }
@@ -143,7 +144,7 @@ export default function InventoryClient({ ingredients: initIng, transactions: in
       {tab==="stock" && (
         <div className="rounded-2xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.05)" }}>
           <table className="pos-table">
-            <thead><tr><th>Bahan</th><th>Stok</th><th>Min Stok</th><th>Satuan</th><th>Harga/Unit</th><th>Status</th><th>Aksi</th></tr></thead>
+            <thead><tr><th>Bahan</th><th>Stok</th><th>Min Stok</th><th>Satuan</th><th>Harga/Unit</th><th>Supplier</th><th>Status</th><th>Aksi</th></tr></thead>
             <tbody>
               {items.map(ing => (
                 <React.Fragment key={ing.id}>
@@ -153,6 +154,7 @@ export default function InventoryClient({ ingredients: initIng, transactions: in
                     <td style={{ color: "rgba(44,36,27,0.5)" }}>{parseFloat(ing.minStock).toLocaleString("id-ID")}</td>
                     <td style={{ color: "rgba(44,36,27,0.7)" }}>{ing.unit}</td>
                     <td style={{ color: "rgba(44,36,27,0.7)" }}>{formatCurrency(parseFloat(ing.costPerUnit))}</td>
+                    <td style={{ color: "rgba(44,36,27,0.7)" }}>{ing.supplier || "—"}</td>
                     <td>{ing.isLow ? <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(245,158,11,0.12)", color: "#F59E0B" }}>Kritis</span> : <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(16,185,129,0.1)", color: "#10B981" }}>Aman</span>}</td>
                     <td>
                       <div className="flex gap-1.5">
@@ -228,6 +230,7 @@ export default function InventoryClient({ ingredients: initIng, transactions: in
                   <div><label className="block text-sm font-medium mb-1.5" style={{ color: "rgba(44,36,27,0.7)" }}>Stok Minimum</label><input type="text" value={fMinStock} onChange={e => setFMinStock(e.target.value)} className="pos-input" style={{ fontSize: "13px" }} /></div>
                   <div><label className="block text-sm font-medium mb-1.5" style={{ color: "rgba(44,36,27,0.7)" }}>Harga per Unit</label><input type="text" value={fCost} onChange={e => setFCost(e.target.value)} className="pos-input" style={{ fontSize: "13px" }} /></div>
                 </div>
+                <div><label className="block text-sm font-medium mb-1.5" style={{ color: "rgba(44,36,27,0.7)" }}>Supplier (Opsional)</label><input type="text" value={fSupplier} onChange={e => setFSupplier(e.target.value)} placeholder="Nama Supplier" className="pos-input" style={{ fontSize: "13px" }} /></div>
               </div>
               <div className="flex gap-3 mt-6">
                 <button onClick={reset} className="flex-1 px-4 py-3 rounded-xl text-sm font-medium" style={{ background: "rgba(0,0,0,0.04)", color: "rgba(44,36,27,0.7)" }}>Batal</button>

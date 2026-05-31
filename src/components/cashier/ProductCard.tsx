@@ -16,6 +16,7 @@ interface Product {
   stationId?: string;
   stationName?: string | null;
   stationType?: string | null;
+  maxStock?: number | null;
 }
 
 interface ProductCardProps {
@@ -34,16 +35,18 @@ export default function ProductCard({ product, onSelect, onViewRecipe }: Product
     return "/ladanya.png";
   })();
 
+  const isOut = !product.isAvailable || product.maxStock === 0;
+
   return (
     <motion.div
       whileHover={{ y: -3, scale: 1.01 }}
       whileTap={{ scale: 0.97 }}
       className="product-card"
-      onClick={() => product.isAvailable && onSelect(product)}
+      onClick={() => !isOut && onSelect(product)}
       style={{
-        opacity: product.isAvailable ? 1 : 0.45,
-        filter: product.isAvailable ? "none" : "grayscale(100%)",
-        cursor: product.isAvailable ? "pointer" : "not-allowed",
+        opacity: !isOut ? 1 : 0.45,
+        filter: !isOut ? "none" : "grayscale(100%)",
+        cursor: !isOut ? "pointer" : "not-allowed",
       }}
     >
       {/* Image */}
@@ -59,7 +62,7 @@ export default function ProductCard({ product, onSelect, onViewRecipe }: Product
           sizes="(max-width: 768px) 50vw, 33vw"
         />
 
-        {!product.isAvailable && (
+        {isOut && (
           <div
             className="absolute inset-0 flex items-center justify-center"
             style={{ background: "rgba(0,0,0,0.5)" }}
@@ -78,7 +81,7 @@ export default function ProductCard({ product, onSelect, onViewRecipe }: Product
         )}
 
         {/* Recipe info button */}
-        {product.isAvailable && onViewRecipe && (
+        {!isOut && onViewRecipe && (
           <button
             onClick={(e) => {
               e.stopPropagation();

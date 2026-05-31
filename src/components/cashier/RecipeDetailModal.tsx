@@ -91,7 +91,7 @@ export default function RecipeDetailModal({
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={false}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -99,7 +99,7 @@ export default function RecipeDetailModal({
         onClick={onClose}
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          initial={false}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
@@ -185,7 +185,7 @@ export default function RecipeDetailModal({
                   return (
                     <motion.div
                       key={recipe.ingredientId}
-                      initial={{ opacity: 0, y: 8 }}
+                      initial={false}
                       animate={{ opacity: 1, y: 0 }}
                       className="rounded-xl p-4"
                       style={{

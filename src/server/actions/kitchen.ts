@@ -15,6 +15,8 @@ const ITEM_STATUS_FLOW = [
   "delivered",
 ] as const;
 
+import { deductInventoryForItem } from "@/server/services/inventory-deduction";
+
 type ItemStatus = (typeof ITEM_STATUS_FLOW)[number] | "canceled" | "void";
 
 export async function updateItemStatus(itemId: string, status: ItemStatus) {
@@ -37,6 +39,10 @@ export async function updateItemStatus(itemId: string, status: ItemStatus) {
 
   revalidatePath("/kitchen");
   revalidatePath("/cashier");
+
+  if (status === "cooking") {
+    await deductInventoryForItem(itemId);
+  }
 
   logActivity({
     activity: "status_change",

@@ -39,6 +39,7 @@ const cashierNav: NavItem[] = [
 
 const kitchenNav: NavItem[] = [
   { href: "/kitchen", icon: <ChefHat size={20} />, label: "Kitchen Display" },
+  { href: "/kitchen/inventory", icon: <Package size={20} />, label: "Bahan Baku" },
 ];
 
 const adminNav: NavItem[] = [
@@ -84,14 +85,13 @@ export default function Sidebar({ role }: SidebarProps) {
     await supabase.auth.signOut();
     toast.success("Berhasil keluar");
     router.push("/login");
-    router.refresh();
   };
 
 
 
   return (
     <aside
-      className="sidebar flex flex-col h-full w-64 flex-shrink-0"
+      className="sidebar hidden md:flex flex-col h-full w-64 flex-shrink-0"
       style={{ minHeight: "100vh" }}
     >
       {/* Logo */}

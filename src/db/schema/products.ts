@@ -61,6 +61,7 @@ export const ingredients = pgTable("ingredients", {
   name: text("name").notNull(),
   unit: text("unit").notNull(), // ml, gr, pcs, liter
   stock: numeric("stock", { precision: 12, scale: 3 }).notNull().default("0"),
+  supplier: text("supplier"),
   minStock: numeric("min_stock", { precision: 12, scale: 3 })
     .notNull()
     .default("0"),

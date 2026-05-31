@@ -1,0 +1,22 @@
+{
+  "name": "Koffie Station × Ladanya POS",
+  "short_name": "KoffiePOS",
+  "description": "Point of Sale System for Koffie Station and Ladanya",
+  "start_url": "/login",
+  "display": "standalone",
+  "background_color": "#F8F5F2",
+  "theme_color": "#1B5E20",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

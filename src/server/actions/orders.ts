@@ -2,11 +2,13 @@
 "use server";
 
 import { db } from "@/db";
-import { orders, orderItems, orderItemModifiers } from "@/db/schema";
+import { orders, orderItems, orderItemModifiers, voidLogs } from "@/db/schema";
 import { generateOrderNumber } from "@/lib/utils/format";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/server/services/activity-log";
 import { calculateFees } from "@/server/services/fees";
+import { eq, inArray } from "drizzle-orm";
+import { restoreInventoryForItem } from "@/server/services/inventory-deduction";
 
 export interface CartItem {
   productId: string;
@@ -115,10 +117,36 @@ export async function createOrder(data: {
 }
 
 export async function voidOrder(orderId: string, reason: string, userId?: string) {
+  // 1. Get all items for the order
+  const items = await db.query.orderItems.findMany({
+    where: eq(orderItems.orderId, orderId),
+  });
+
+  // 2. Restore inventory for any items that were deducted
+  for (const item of items) {
+    if (item.inventoryDeducted) {
+      await restoreInventoryForItem(item.id, userId);
+    }
+  }
+
+  // 3. Mark order as void
   await db
     .update(orders)
     .set({ status: "void", updatedAt: new Date() })
     .where(eq(orders.id, orderId));
+
+  // 4. Mark all items as void
+  await db
+    .update(orderItems)
+    .set({ status: "void", updatedAt: new Date() })
+    .where(eq(orderItems.orderId, orderId));
+
+  // 5. Create voidLog
+  await db.insert(voidLogs).values({
+    orderId,
+    reason,
+    voidedById: userId || null,
+  });
 
   revalidatePath("/cashier");
   revalidatePath("/kitchen");
@@ -154,5 +182,51 @@ export async function getOrderReceipt(orderId: string) {
   return order;
 }
 
-// Import missing
-import { eq } from "drizzle-orm";
+export async function cancelOrderItem(orderItemId: string, reason: string, userId?: string) {
+  const [item] = await db
+    .select()
+    .from(orderItems)
+    .where(eq(orderItems.id, orderItemId))
+    .limit(1);
+
+  if (!item) {
+    return { success: false, message: "Item not found" };
+  }
+
+  if (item.status === "ready" || item.status === "delivered") {
+    return { success: false, message: "Cannot cancel item that is already ready or delivered" };
+  }
+
+  // Restore inventory if it was deducted
+  if (item.inventoryDeducted) {
+    await restoreInventoryForItem(orderItemId, userId);
+  }
+
+  // Mark item as canceled
+  await db
+    .update(orderItems)
+    .set({ status: "canceled", updatedAt: new Date() })
+    .where(eq(orderItems.id, orderItemId));
+
+  // Log void
+  await db.insert(voidLogs).values({
+    orderId: item.orderId,
+    orderItemId,
+    reason,
+    voidedById: userId || null,
+  });
+
+  revalidatePath("/cashier");
+  revalidatePath("/kitchen");
+
+  logActivity({
+    userId: userId || undefined,
+    activity: "update",
+    entityType: "order_item",
+    entityId: orderItemId,
+    description: `Item di-cancel: ${reason}`,
+    page: "/cashier",
+  });
+
+  return { success: true };
+}

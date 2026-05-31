@@ -137,6 +137,7 @@ export async function createIngredient(data: {
   stock?: string;
   minStock?: string;
   costPerUnit?: string;
+  supplier?: string;
 }) {
   const [created] = await db
     .insert(ingredients)
@@ -146,10 +147,12 @@ export async function createIngredient(data: {
       stock: data.stock || "0",
       minStock: data.minStock || "0",
       costPerUnit: data.costPerUnit || "0",
+      supplier: data.supplier || null,
     })
     .returning();
 
   revalidatePath("/admin/inventory");
+  revalidatePath("/kitchen/inventory");
   return { success: true, data: created };
 }
 
@@ -160,6 +163,7 @@ export async function updateIngredient(
     unit?: string;
     minStock?: string;
     costPerUnit?: string;
+    supplier?: string;
     isActive?: boolean;
   }
 ) {
@@ -173,11 +177,13 @@ export async function updateIngredient(
     .returning();
 
   revalidatePath("/admin/inventory");
+  revalidatePath("/kitchen/inventory");
   return { success: true, data: updated };
 }
 
 export async function deleteIngredient(id: string) {
   await db.delete(ingredients).where(eq(ingredients.id, id));
   revalidatePath("/admin/inventory");
+  revalidatePath("/kitchen/inventory");
   return { success: true };
 }

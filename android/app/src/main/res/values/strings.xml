@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">KoffiePOS</string>
+    <string name="title_activity_main">KoffiePOS</string>
+    <string name="package_name">com.koffiestasiun.pos</string>
+    <string name="custom_url_scheme">com.koffiestasiun.pos</string>
+</resources>

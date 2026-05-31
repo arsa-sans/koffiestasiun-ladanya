@@ -84,8 +84,8 @@ export default function PaymentModal({ orderId, totalAmount, onClose, onSuccess 
   if (success) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.8)" }}>
-        <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-6 bg-white p-8 rounded-3xl max-w-sm w-full">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+        <motion.div initial={false} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-6 bg-white p-8 rounded-3xl max-w-sm w-full">
+          <motion.div initial={false} animate={{ scale: 1 }} transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
             className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: "rgba(16,185,129,0.15)", border: "2px solid #10B981" }}>
             <CheckCircle size={48} color="#10B981" />
           </motion.div>
@@ -125,7 +125,7 @@ export default function PaymentModal({ orderId, totalAmount, onClose, onSuccess 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }} />
-      <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+      <motion.div initial={false} animate={{ opacity: 1, scale: 1, y: 0 }}
         className="relative w-full max-w-md rounded-3xl p-6" style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.08)" }}
         onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
