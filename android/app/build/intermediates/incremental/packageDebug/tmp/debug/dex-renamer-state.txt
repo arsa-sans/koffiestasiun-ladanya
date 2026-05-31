@@ -1,12 +1,12 @@
-#Fri May 29 21:50:37 WIB 2026
-base.0=C\:\\Users\\AXIOO\\Documents\\PROGRAM\\koffiestasiun-ladanya\\android\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
-base.1=C\:\\Users\\AXIOO\\Documents\\PROGRAM\\koffiestasiun-ladanya\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\14\\classes.dex
-base.2=C\:\\Users\\AXIOO\\Documents\\PROGRAM\\koffiestasiun-ladanya\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\2\\classes.dex
-base.3=C\:\\Users\\AXIOO\\Documents\\PROGRAM\\koffiestasiun-ladanya\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\5\\classes.dex
-base.4=C\:\\Users\\AXIOO\\Documents\\PROGRAM\\koffiestasiun-ladanya\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\7\\classes.dex
-base.5=C\:\\Users\\AXIOO\\Documents\\PROGRAM\\koffiestasiun-ladanya\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\8\\classes.dex
-base.6=C\:\\Users\\AXIOO\\Documents\\PROGRAM\\koffiestasiun-ladanya\\android\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
-base.7=C\:\\Users\\AXIOO\\Documents\\PROGRAM\\koffiestasiun-ladanya\\android\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\11\\classes.dex
+#Sun May 31 20:13:12 WIB 2026
+base.0=C\:\\OneDrive\\Desktop\\Arsa\\Sans\\TEFA PPLG\\Project\\koffiestasiun\\koffiepos\\android\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
+base.1=C\:\\OneDrive\\Desktop\\Arsa\\Sans\\TEFA PPLG\\Project\\koffiestasiun\\koffiepos\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\14\\classes.dex
+base.2=C\:\\OneDrive\\Desktop\\Arsa\\Sans\\TEFA PPLG\\Project\\koffiestasiun\\koffiepos\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\2\\classes.dex
+base.3=C\:\\OneDrive\\Desktop\\Arsa\\Sans\\TEFA PPLG\\Project\\koffiestasiun\\koffiepos\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\5\\classes.dex
+base.4=C\:\\OneDrive\\Desktop\\Arsa\\Sans\\TEFA PPLG\\Project\\koffiestasiun\\koffiepos\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\7\\classes.dex
+base.5=C\:\\OneDrive\\Desktop\\Arsa\\Sans\\TEFA PPLG\\Project\\koffiestasiun\\koffiepos\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\8\\classes.dex
+base.6=C\:\\OneDrive\\Desktop\\Arsa\\Sans\\TEFA PPLG\\Project\\koffiestasiun\\koffiepos\\android\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
+base.7=C\:\\OneDrive\\Desktop\\Arsa\\Sans\\TEFA PPLG\\Project\\koffiestasiun\\koffiepos\\android\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\11\\classes.dex
 path.0=classes.dex
 path.1=14/classes.dex
 path.2=2/classes.dex

@@ -6,9 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'public',
 
   server: {
-    // Development: gunakan IP lokal Anda
-    // Production: ganti dengan URL deployment (Vercel/VPS)
-    url: process.env.CAPACITOR_SERVER_URL || 'http://192.168.1.6:3000',
+    url: process.env.CAPACITOR_SERVER_URL || 'http://192.168.108.123:3000',
     cleartext: true,
     androidScheme: 'https',
     // Izinkan navigasi ke domain yang dibutuhkan

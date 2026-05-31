@@ -3,8 +3,9 @@
 	"appName": "KoffiePOS",
 	"webDir": "public",
 	"server": {
-		"url": "http://192.168.1.6:3000",
+		"url": "http://192.168.108.123:3000",
 		"cleartext": true,
+		"androidScheme": "https",
 		"allowNavigation": [
 			"*.supabase.co",
 			"*.supabase.in",
@@ -14,9 +15,7 @@
 		]
 	},
 	"android": {
-		"scheme": "https",
-		"backgroundColor": "#1B5E20",
-		"allowMixedContent": true
+		"backgroundColor": "#1B5E20"
 	},
 	"plugins": {
 		"SplashScreen": {
