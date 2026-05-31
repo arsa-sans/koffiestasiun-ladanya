@@ -32,8 +32,13 @@ export default function LoginPage() {
         return;
       }
 
-      // Fetch user role and redirect to correct dashboard
-      const res = await fetch("/api/auth/role");
+      // Fetch user role using POST to avoid browser caching, and redirect to correct dashboard
+      const res = await fetch("/api/auth/role", {
+        method: "POST",
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      });
       const data = await res.json();
 
       const roleRedirects: Record<string, string> = {
@@ -43,7 +48,7 @@ export default function LoginPage() {
       };
 
       const target = roleRedirects[data.role] || "/cashier";
-      router.push(target);
+      window.location.href = target;
     } catch (err: any) {
       alert("Terjadi kesalahan: " + (err.message || "Unknown error"));
       toast.error("Terjadi kesalahan: " + (err.message || "Unknown error"));

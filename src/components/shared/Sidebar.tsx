@@ -84,7 +84,7 @@ export default function Sidebar({ role }: SidebarProps) {
     const supabase = createClient();
     await supabase.auth.signOut();
     toast.success("Berhasil keluar");
-    router.push("/login");
+    window.location.href = "/login";
   };
 
 

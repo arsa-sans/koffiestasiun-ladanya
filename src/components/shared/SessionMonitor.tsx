@@ -16,8 +16,7 @@ export default function SessionMonitor() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
         toast.info("Sesi Anda telah berakhir, silakan login kembali.");
-        router.push("/login");
-        router.refresh();
+        window.location.href = "/login";
       } else if (event === "TOKEN_REFRESHED") {
         console.log("Session token refreshed");
       }

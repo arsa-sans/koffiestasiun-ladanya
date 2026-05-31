@@ -17,6 +17,21 @@ const ROLE_DASHBOARD: Record<string, string> = {
   kitchen: "/kitchen",
 };
 
+// Helper to redirect while copying the refreshed cookies from Supabase client
+function redirectWithCookies(
+  request: NextRequest,
+  url: URL,
+  supabaseResponse: NextResponse
+) {
+  const redirectResponse = NextResponse.redirect(url);
+  supabaseResponse.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie.name, cookie.value, {
+      ...cookie,
+    });
+  });
+  return redirectResponse;
+}
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -60,7 +75,7 @@ export async function proxy(request: NextRequest) {
   if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return redirectWithCookies(request, url, supabaseResponse);
   }
 
   // Protected dashboard routes — check role
@@ -77,7 +92,7 @@ export async function proxy(request: NextRequest) {
       // User exists in auth but not in users table
       const url = request.nextUrl.clone();
       url.pathname = "/unauthorized";
-      return NextResponse.redirect(url);
+      return redirectWithCookies(request, url, supabaseResponse);
     }
 
     // Check if role is allowed to access this path
@@ -90,7 +105,7 @@ export async function proxy(request: NextRequest) {
       // Redirect to their own dashboard
       const url = request.nextUrl.clone();
       url.pathname = ROLE_DASHBOARD[role] || "/login";
-      return NextResponse.redirect(url);
+      return redirectWithCookies(request, url, supabaseResponse);
     }
 
     // Set role header for downstream use
