@@ -3,12 +3,13 @@
 	"appName": "KoffiePOS",
 	"webDir": "public",
 	"server": {
-		"url": "http://192.168.108.123:3000",
+		"url": "https://koffiestasiun-ladanya.vercel.app/",
 		"cleartext": true,
 		"androidScheme": "https",
 		"allowNavigation": [
 			"*.supabase.co",
 			"*.supabase.in",
+			"*.vercel.app",
 			"localhost",
 			"192.168.*.*",
 			"10.*.*.*"

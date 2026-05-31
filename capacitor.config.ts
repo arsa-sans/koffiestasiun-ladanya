@@ -6,13 +6,13 @@ const config: CapacitorConfig = {
   webDir: 'public',
 
   server: {
-    url: process.env.CAPACITOR_SERVER_URL || 'http://192.168.108.123:3000',
+    url: process.env.CAPACITOR_SERVER_URL || 'https://koffiestasiun-ladanya.vercel.app/',
     cleartext: true,
     androidScheme: 'https',
-    // Izinkan navigasi ke domain yang dibutuhkan
     allowNavigation: [
       '*.supabase.co',
       '*.supabase.in',
+      '*.vercel.app',
       'localhost',
       '192.168.*.*',
       '10.*.*.*',

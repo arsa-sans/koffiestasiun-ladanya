@@ -1,4 +1,4 @@
-#Sun May 31 20:13:12 WIB 2026
+#Sun May 31 21:50:54 WIB 2026
 base.0=C\:\\OneDrive\\Desktop\\Arsa\\Sans\\TEFA PPLG\\Project\\koffiestasiun\\koffiepos\\android\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
 base.1=C\:\\OneDrive\\Desktop\\Arsa\\Sans\\TEFA PPLG\\Project\\koffiestasiun\\koffiepos\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\14\\classes.dex
 base.2=C\:\\OneDrive\\Desktop\\Arsa\\Sans\\TEFA PPLG\\Project\\koffiestasiun\\koffiepos\\android\\app\\build\\intermediates\\dex\\debug\\mergeLibDexDebug\\2\\classes.dex
