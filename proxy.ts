@@ -1,7 +1,7 @@
 // proxy.ts — Next.js 16 route protection with role-based access control
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import postgres from "postgres";
+
 
 // Role → allowed path prefixes
 const ROLE_PATHS: Record<string, string[]> = {
@@ -85,8 +85,8 @@ export async function proxy(request: NextRequest) {
   );
 
   if (isProtectedRoute) {
-    // Query user role from DB directly (proxy runs on Node.js runtime)
-    const role = await getUserRoleFromDB(user.id);
+    // Query user role via Supabase PostgREST client (Edge-compatible)
+    const role = await getUserRoleFromDB(supabase, user.id);
 
     if (!role) {
       // User exists in auth but not in users table
@@ -117,16 +117,23 @@ export async function proxy(request: NextRequest) {
 
 // Lightweight DB query for proxy — avoids importing Drizzle ORM
 // which may have module issues in the proxy context
+// Lightweight DB query using Supabase Rest client to be fully Vercel Edge Runtime compatible
 async function getUserRoleFromDB(
+  supabase: any,
   authId: string
 ): Promise<string | null> {
   try {
-    const sql = postgres(process.env.DATABASE_URL!, { max: 1 });
-    const result = await sql`
-      SELECT role FROM users WHERE auth_id = ${authId} LIMIT 1
-    `;
-    await sql.end();
-    return result[0]?.role || null;
+    const { data, error } = await supabase
+      .from("users")
+      .select("role")
+      .eq("auth_id", authId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("getUserRoleFromDB Supabase error:", error);
+      return null;
+    }
+    return data?.role || null;
   } catch (err) {
     console.error("getUserRoleFromDB error:", err);
     return null;
