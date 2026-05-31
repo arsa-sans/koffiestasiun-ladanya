@@ -29,6 +29,7 @@ interface Product {
   isAvailable?: boolean;
   categoryId?: string;
   stationId?: string;
+  maxStock?: number | null;
 }
 
 export interface SelectedModifier {
@@ -120,7 +121,7 @@ export default function ModifierModal({
         onClick={onClose}
       >
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={false}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="absolute inset-0"
@@ -128,7 +129,7 @@ export default function ModifierModal({
         />
 
         <motion.div
-          initial={{ opacity: 0, y: 60, scale: 0.95 }}
+          initial={false}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 60, scale: 0.95 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
@@ -274,8 +275,9 @@ export default function ModifierModal({
                   {quantity}
                 </span>
                 <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  onClick={() => setQuantity(Math.min(product.maxStock ?? Infinity, quantity + 1))}
+                  disabled={product.maxStock !== null && product.maxStock !== undefined && quantity >= product.maxStock}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ background: "#F1EBE4", border: "1px solid rgba(0,0,0,0.08)" }}
                 >
                   <Plus size={16} color="#2C241B" />

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Coffee, Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -15,24 +14,25 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (e?: any) => {
+    if (e && e.preventDefault) e.preventDefault();
     setLoading(true);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      toast.error("Login gagal: " + error.message);
-      setLoading(false);
-      return;
-    }
-
-    // Fetch user role and redirect to correct dashboard
     try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        alert("Login gagal: " + error.message);
+        toast.error("Login gagal: " + error.message);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch user role and redirect to correct dashboard
       const res = await fetch("/api/auth/role");
       const data = await res.json();
 
@@ -44,10 +44,11 @@ export default function LoginPage() {
 
       const target = roleRedirects[data.role] || "/cashier";
       router.push(target);
-    } catch {
-      router.push("/cashier");
+    } catch (err: any) {
+      alert("Terjadi kesalahan: " + (err.message || "Unknown error"));
+      toast.error("Terjadi kesalahan: " + (err.message || "Unknown error"));
+      setLoading(false);
     }
-    router.refresh();
   };
 
   return (
@@ -66,25 +67,19 @@ export default function LoginPage() {
 
       {/* Grid pattern */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
         style={{
           backgroundImage: `linear-gradient(rgba(192,139,92,1) 1px, transparent 1px), linear-gradient(90deg, rgba(192,139,92,1) 1px, transparent 1px)`,
           backgroundSize: "40px 40px",
         }}
       />
 
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-md px-4"
+      <div
+        className="relative z-10 w-full max-w-md px-4 fade-in-up"
       >
         {/* Logo */}
         <div className="text-center mb-10">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
+          <div
             className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-6"
             style={{
               background: "rgba(192,139,92,0.12)",
@@ -92,12 +87,9 @@ export default function LoginPage() {
             }}
           >
             <Coffee size={38} color="#C08B5C" />
-          </motion.div>
+          </div>
 
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+          <h1
             className="text-3xl font-bold mb-1"
             style={{
               fontFamily: "Playfair Display, serif",
@@ -109,11 +101,8 @@ export default function LoginPage() {
             }}
           >
             Koffie Station
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.35 }}
+          </h1>
+          <p
             className="text-sm"
             style={{
               fontFamily: "Noto Serif JP, serif",
@@ -121,23 +110,17 @@ export default function LoginPage() {
             }}
           >
             × Ladanya Japanese Food
-          </motion.p>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+          </p>
+          <p
             className="text-xs mt-2"
             style={{ color: "rgba(44,36,27,0.35)" }}
           >
             Restaurant Operating System
-          </motion.p>
+          </p>
         </div>
 
         {/* Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
+        <div
           className="rounded-3xl p-8"
           style={{
             background: "rgba(255,255,255,0.9)",
@@ -153,7 +136,7 @@ export default function LoginPage() {
             Masuk ke Sistem
           </h2>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-4">
             <div>
               <label
                 className="block text-sm font-medium mb-2"
@@ -191,36 +174,46 @@ export default function LoginPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1"
-                  style={{ color: "rgba(44,36,27,0.5)" }}
+                  onPointerDown={(e) => { 
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
+                    setShowPassword(!showPassword); 
+                  }}
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
+                    setShowPassword(!showPassword); 
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2 z-50"
+                  style={{ color: "rgba(44,36,27,0.5)", cursor: "pointer", touchAction: "manipulation" }}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
 
-            <motion.button
-              type="submit"
+            <button
+              type="button"
+              onClick={handleLogin}
               disabled={loading}
-              whileTap={{ scale: 0.98 }}
-              className="btn-primary w-full mt-6"
+              className="btn-primary w-full mt-6 transition-all"
               style={{
                 background: loading ? "#8A6A55" : "#C08B5C",
                 cursor: loading ? "not-allowed" : "pointer",
+                transform: loading ? "scale(0.98)" : "scale(1)",
               }}
             >
               {loading ? (
-                <>
+                <div className="flex items-center justify-center gap-2">
                   <Loader2 size={18} className="animate-spin" />
                   <span>Masuk...</span>
-                </>
+                </div>
               ) : (
                 "Masuk"
               )}
-            </motion.button>
-          </form>
-        </motion.div>
+            </button>
+          </div>
+        </div>
 
         {/* Footer */}
         <p
@@ -229,7 +222,7 @@ export default function LoginPage() {
         >
           {APP_NAME} · POS v1.0
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 }

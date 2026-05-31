@@ -806,19 +806,19 @@ IMPLEMENTATION PROGRESS TRACKING
 [x] Kasir — Table Management Modal
 [x] Kasir — Riwayat Order
 [x] Dapur — Kitchen Display System
-[ ] Middleware Route Protection
-[ ] Supabase Realtime untuk Kitchen Display
-[ ] Responsive Mobile (hamburger/bottom nav)
-[ ] PWA Manifest + Service Worker
-[ ] Session Monitoring (auto-logout, refresh)
-[ ] Supplier field di ingredients
-[ ] Dashboard Statistik Performa Dapur
-[ ] Audit: semua delete pakai custom dialog
-[ ] Audit: semua event ter-log di activity_logs
-[ ] Audit: responsive semua halaman
-[ ] Audit: loading state semua halaman
-[ ] Audit: empty state semua halaman
-[ ] Audit: build test (next build tanpa error)
-[ ] Print Receipt (react-to-print)
-[ ] Inventory deduction otomatis saat cooking
-[ ] Void/Cancel order flow lengkap
+[x] Middleware Route Protection
+[x] Supabase Realtime untuk Kitchen Display
+[x] Responsive Mobile (hamburger/bottom nav)
+[x] PWA Manifest + Service Worker
+[x] Session Monitoring (auto-logout, refresh)
+[x] Supplier field di ingredients
+[x] Dashboard Statistik Performa Dapur
+[x] Audit: semua delete pakai custom dialog
+[x] Audit: semua event ter-log di activity_logs
+[x] Audit: responsive semua halaman
+[x] Audit: loading state semua halaman
+[x] Audit: empty state semua halaman
+[x] Audit: build test (next build tanpa error)
+[x] Print Receipt (react-to-print)
+[x] Inventory deduction otomatis saat cooking
+[x] Void/Cancel order flow lengkap

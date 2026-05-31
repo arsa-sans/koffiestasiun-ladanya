@@ -1,8 +1,10 @@
 // app/layout.tsx
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
 import Providers from "@/components/shared/Providers";
+import CapacitorInit from "@/components/shared/CapacitorInit";
+import SessionMonitor from "@/components/shared/SessionMonitor";
 
 export const metadata: Metadata = {
   title: {
@@ -12,6 +14,23 @@ export const metadata: Metadata = {
   description:
     "Enterprise-grade dual-brand restaurant POS system for Koffie Station and Ladanya Japanese Food",
   keywords: ["POS", "restaurant", "coffee shop", "Japanese food", "cashier"],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "KoffiePOS",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#1B5E20",
 };
 
 export default function RootLayout({
@@ -32,14 +51,26 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Serif+JP:wght@300;400;500&family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        {/* Mobile Web App Meta Tags */}
+        <meta name="color-scheme" content="light only" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
+        <meta name="apple-mobile-web-app-title" content="KoffiePOS" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body className="antialiased">
+        <SessionMonitor />
+        <CapacitorInit />
         <Providers>
           {children}
         </Providers>
         <Toaster
           theme="light"
-          position="top-right"
+          position="top-center"
           toastOptions={{
             style: {
               background: "#FFFFFF",

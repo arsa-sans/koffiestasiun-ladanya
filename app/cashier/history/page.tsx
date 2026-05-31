@@ -3,10 +3,12 @@ export const revalidate = 0;
 
 // app/cashier/history/page.tsx
 import { getOrderHistory } from "@/server/queries/orders";
-import { formatCurrency, formatDateTime } from "@/lib/utils/format";
-import { STATUS_COLORS } from "@/constants";
+import HistoryClient from "./HistoryClient";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function CashierHistoryPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const orders = await getOrderHistory(50);
 
   return (
@@ -15,32 +17,7 @@ export default async function CashierHistoryPage() {
         Riwayat Order
       </h1>
 
-      <div className="rounded-2xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.05)" }}>
-        <table className="pos-table">
-          <thead>
-            <tr><th>No. Order</th><th>Pelanggan</th><th>Meja</th><th>Item</th><th>Total</th><th>Status</th><th>Waktu</th></tr>
-          </thead>
-          <tbody>
-            {orders.map((order) => {
-              const sc = STATUS_COLORS[order.status] || "#C08B5C";
-              return (
-                <tr key={order.id}>
-                  <td><span className="font-mono text-xs" style={{ color: "#C08B5C" }}>{order.orderNumber}</span></td>
-                  <td style={{ color: "rgba(44,36,27,0.7)" }}>{order.customerName || "—"}</td>
-                  <td style={{ color: "rgba(44,36,27,0.7)" }}>{order.table?.code ? `Meja ${order.table.code}` : "Takeaway"}</td>
-                  <td style={{ color: "rgba(44,36,27,0.7)" }}>{order.items.length} item</td>
-                  <td className="font-semibold" style={{ color: "#2C241B" }}>{formatCurrency(parseFloat(String(order.totalAmount)))}</td>
-                  <td><span className="text-xs px-2.5 py-1 rounded-full" style={{ background: `${sc}18`, color: sc }}>{order.status}</span></td>
-                  <td className="text-xs" style={{ color: "rgba(44,36,27,0.4)" }}>{formatDateTime(order.createdAt)}</td>
-                </tr>
-              );
-            })}
-            {orders.length === 0 && (
-              <tr><td colSpan={7} className="text-center py-8" style={{ color: "rgba(44,36,27,0.4)" }}>Belum ada order</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <HistoryClient orders={orders} userId={user?.id} />
     </div>
   );
 }

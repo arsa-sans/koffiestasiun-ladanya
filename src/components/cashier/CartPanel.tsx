@@ -21,6 +21,7 @@ export interface CartItemType {
   unitPrice: number;
   modifiers: SelectedModifier[];
   notes?: string;
+  maxStock?: number | null;
 }
 
 interface CartPanelProps {
@@ -97,7 +98,7 @@ export default function CartPanel({
               const modTotal = item.modifiers.reduce((ms, m) => ms + m.price, 0);
               const lineTotal = (item.unitPrice + modTotal) * item.quantity;
               return (
-                <motion.div key={item.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                <motion.div key={item.id} initial={false} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                   className="rounded-2xl p-3" style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.04)" }}>
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex-1 min-w-0">
@@ -118,7 +119,7 @@ export default function CartPanel({
                         <Minus size={12} color="#2C241B" />
                       </button>
                       <span className="text-sm font-bold w-5 text-center" style={{ color: "#2C241B" }}>{item.quantity}</span>
-                      <button onClick={() => onUpdateQty(item.id, item.quantity + 1)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#F1EBE4" }}>
+                      <button onClick={() => onUpdateQty(item.id, item.quantity + 1)} disabled={item.maxStock !== null && item.maxStock !== undefined && item.quantity >= item.maxStock} className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: "#F1EBE4" }}>
                         <Plus size={12} color="#2C241B" />
                       </button>
                     </div>
