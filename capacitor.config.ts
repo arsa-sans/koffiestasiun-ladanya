@@ -1,4 +1,21 @@
 import type { CapacitorConfig } from '@capacitor/cli';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// Load CAPACITOR_SERVER_URL from .env file manually as Capacitor runs in a raw Node.js context
+let capacitorServerUrl = process.env.CAPACITOR_SERVER_URL;
+try {
+  const envPath = path.resolve(process.cwd(), '.env');
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    const match = envContent.match(/^CAPACITOR_SERVER_URL\s*=\s*(.+)$/m);
+    if (match) {
+      capacitorServerUrl = match[1].trim().replace(/^["']|["']$/g, '');
+    }
+  }
+} catch (error) {
+  console.warn('Info: Gagal membaca file .env untuk Capacitor:', error);
+}
 
 const config: CapacitorConfig = {
   appId: 'com.koffiestasiun.pos',
@@ -6,7 +23,7 @@ const config: CapacitorConfig = {
   webDir: 'public',
 
   server: {
-    url: process.env.CAPACITOR_SERVER_URL || 'https://koffiestasiun-ladanya.vercel.app/',
+    url: capacitorServerUrl || undefined,
     cleartext: true,
     androidScheme: 'https',
     allowNavigation: [

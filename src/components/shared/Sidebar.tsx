@@ -17,6 +17,7 @@ import {
   Sliders,
   Receipt,
   ActivitySquare,
+  Terminal,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -55,6 +56,7 @@ const adminNav: NavItem[] = [
   { href: "/admin/fees", icon: <Receipt size={20} />, label: "Biaya Tambahan" },
   { href: "/admin/users", icon: <Users size={20} />, label: "Pengguna", section: "Sistem" },
   { href: "/admin/activity", icon: <ActivitySquare size={20} />, label: "Log Aktivitas" },
+  { href: "/admin/sql", icon: <Terminal size={20} />, label: "SQL Editor" },
 ];
 
 const navMap = {

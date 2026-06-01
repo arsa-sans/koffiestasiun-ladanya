@@ -11,7 +11,10 @@ const globalForPostgres = globalThis as unknown as {
 };
 
 // Disable prefetch as it is not supported for "Transaction" pool mode
-const client = globalForPostgres.postgresConnection ?? postgres(connectionString, { prepare: false });
+const client = globalForPostgres.postgresConnection ?? postgres(connectionString, {
+  prepare: false,
+  max: 1,
+});
 
 if (process.env.NODE_ENV !== "production") {
   globalForPostgres.postgresConnection = client;
