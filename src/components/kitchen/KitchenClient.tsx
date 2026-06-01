@@ -193,7 +193,7 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
             <p className="text-sm" style={{ color: "rgba(44,36,27,0.4)" }}>Dapur sedang tenang...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" style={{ alignItems: "start" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4" style={{ alignItems: "start" }}>
             <AnimatePresence>
               {filteredOrders.map((order) => {
                 const elapsedMins = getElapsedMins(order.createdAt);

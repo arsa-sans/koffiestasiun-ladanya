@@ -93,7 +93,7 @@ export default function Sidebar({ role }: SidebarProps) {
 
   return (
     <aside
-      className="sidebar hidden md:flex flex-col h-full w-64 flex-shrink-0"
+      className="sidebar hidden lg:flex flex-col h-full w-64 flex-shrink-0"
       style={{ minHeight: "100vh" }}
     >
       {/* Logo */}

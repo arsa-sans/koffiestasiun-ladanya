@@ -60,8 +60,8 @@
 37-->C:\OneDrive\Desktop\Arsa\Sans\TEFA PPLG\Project\koffiestasiun\koffiepos\android\app\src\main\AndroidManifest.xml:14:13-56
 38            android:launchMode="singleTask"
 38-->C:\OneDrive\Desktop\Arsa\Sans\TEFA PPLG\Project\koffiestasiun\koffiepos\android\app\src\main\AndroidManifest.xml:16:13-44
-39            android:screenOrientation="portrait"
-39-->C:\OneDrive\Desktop\Arsa\Sans\TEFA PPLG\Project\koffiestasiun\koffiepos\android\app\src\main\AndroidManifest.xml:18:13-49
+39            android:screenOrientation="fullSensor"
+39-->C:\OneDrive\Desktop\Arsa\Sans\TEFA PPLG\Project\koffiestasiun\koffiepos\android\app\src\main\AndroidManifest.xml:18:13-51
 40            android:theme="@style/AppTheme.NoActionBarLaunch" >
 40-->C:\OneDrive\Desktop\Arsa\Sans\TEFA PPLG\Project\koffiestasiun\koffiepos\android\app\src\main\AndroidManifest.xml:15:13-62
 41            <intent-filter>

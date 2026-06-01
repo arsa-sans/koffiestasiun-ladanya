@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trash2, Minus, Plus, ShoppingCart } from "lucide-react";
+import { Trash2, Minus, Plus, ShoppingCart, X } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 import type { SelectedModifier } from "./ModifierModal";
 
@@ -33,6 +33,7 @@ interface CartPanelProps {
   onCustomerNameChange: (v: string) => void;
   onNotesChange: (v: string) => void;
   onCheckout: () => void;
+  onClose?: () => void;
 }
 
 export default function CartPanel({
@@ -44,6 +45,7 @@ export default function CartPanel({
   onCustomerNameChange,
   onNotesChange,
   onCheckout,
+  onClose,
 }: CartPanelProps) {
   const [fees, setFees] = useState<FeeItem[]>([]);
 
@@ -70,13 +72,22 @@ export default function CartPanel({
   const totalAmount = subtotal + totalFees;
 
   return (
-    <div className="cart-panel flex flex-col h-full" style={{ width: 340, flexShrink: 0 }}>
+    <div className="cart-panel flex flex-col h-full w-full lg:w-[340px] flex-shrink-0">
       <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
         <ShoppingCart size={18} color="#C08B5C" />
         <p className="text-sm font-semibold flex-1" style={{ color: "#2C241B" }}>Pesanan</p>
         <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(192,139,92,0.12)", color: "#C08B5C" }}>
           {items.length} item
         </span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden w-8 h-8 rounded-xl flex items-center justify-center hover:bg-black/5 active:scale-95 transition-all"
+            title="Tutup"
+          >
+            <X size={18} color="#2C241B" />
+          </button>
+        )}
       </div>
 
       <div className="px-4 py-3 space-y-2" style={{ borderBottom: "1px solid rgba(0,0,0,0.04)" }}>

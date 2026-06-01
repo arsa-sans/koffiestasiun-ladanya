@@ -101,7 +101,7 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\zh
 activity#com.koffiestasiun.pos.MainActivity
 ADDED from C:\OneDrive\Desktop\Arsa\Sans\TEFA PPLG\Project\koffiestasiun\koffiepos\android\app\src\main\AndroidManifest.xml:11:9-23:20
 	android:screenOrientation
-		ADDED from C:\OneDrive\Desktop\Arsa\Sans\TEFA PPLG\Project\koffiestasiun\koffiepos\android\app\src\main\AndroidManifest.xml:18:13-49
+		ADDED from C:\OneDrive\Desktop\Arsa\Sans\TEFA PPLG\Project\koffiestasiun\koffiepos\android\app\src\main\AndroidManifest.xml:18:13-51
 	android:label
 		ADDED from C:\OneDrive\Desktop\Arsa\Sans\TEFA PPLG\Project\koffiestasiun\koffiepos\android\app\src\main\AndroidManifest.xml:14:13-56
 	android:launchMode

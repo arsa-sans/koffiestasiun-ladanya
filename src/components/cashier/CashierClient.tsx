@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Settings2 } from "lucide-react";
+import { Search, Settings2, ShoppingCart, ChevronRight } from "lucide-react";
 import ProductCard from "@/components/cashier/ProductCard";
 import CartPanel, { type CartItemType } from "@/components/cashier/CartPanel";
 import ModifierModal, { type SelectedModifier } from "@/components/cashier/ModifierModal";
@@ -12,6 +12,7 @@ import TableManagementModal from "@/components/cashier/TableManagementModal";
 import { createOrder } from "@/server/actions/orders";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
+import { formatCurrency } from "@/lib/utils/format";
 
 interface Category { id: string; name: string; slug: string }
 // Full product type (from server, used in ProductCard)
@@ -43,6 +44,7 @@ export default function CashierClient({ categories, initialIngredients, products
   const [recipeProductId, setRecipeProductId] = useState<string | null>(null);
   const [showTableManager, setShowTableManager] = useState(false);
   const [localTables, setLocalTables] = useState(tables);
+  const [isCartOpenOnMobile, setIsCartOpenOnMobile] = useState(false);
 
   // Dynamic Stock Calculation
   const remainingIngredients = useMemo(() => {
@@ -205,6 +207,7 @@ export default function CashierClient({ categories, initialIngredients, products
     setOrderNotes("");
     setSelectedTableId("");
     setPayingOrderId(null);
+    setIsCartOpenOnMobile(false);
     toast.success("Transaksi selesai! 🎉");
   };
 
@@ -258,7 +261,7 @@ export default function CashierClient({ categories, initialIngredients, products
 
         {/* Product Grid */}
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             <AnimatePresence>
               {filteredProducts.map((product, i) => (
                 <motion.div key={product.id} initial={false} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
@@ -276,23 +279,107 @@ export default function CashierClient({ categories, initialIngredients, products
         </div>
       </div>
 
-      {/* Cart Panel */}
-      <CartPanel 
-        items={cartItems.map(item => {
-          const dynamicProd = dynamicProducts.find(p => p.id === item.productId);
-          return {
-            ...item,
-            // The max stock for this specific line item is its current quantity + whatever is still available
-            maxStock: dynamicProd?.maxStock !== null && dynamicProd?.maxStock !== undefined 
-              ? item.quantity + dynamicProd.maxStock 
-              : null
-          };
-        })} 
-        customerName={customerName} 
-        notes={orderNotes}
-        onUpdateQty={updateQty} onRemove={removeItem}
-        onCustomerNameChange={setCustomerName} onNotesChange={setOrderNotes}
-        onCheckout={handleCheckout} />
+      {/* Desktop Cart (Always visible on lg screens) */}
+      <div className="hidden lg:block h-full border-l border-black/5 flex-shrink-0">
+        <CartPanel 
+          items={cartItems.map(item => {
+            const dynamicProd = dynamicProducts.find(p => p.id === item.productId);
+            return {
+              ...item,
+              maxStock: dynamicProd?.maxStock !== null && dynamicProd?.maxStock !== undefined 
+                ? item.quantity + dynamicProd.maxStock 
+                : null
+            };
+          })} 
+          customerName={customerName} 
+          notes={orderNotes}
+          onUpdateQty={updateQty} onRemove={removeItem}
+          onCustomerNameChange={setCustomerName} onNotesChange={setOrderNotes}
+          onCheckout={handleCheckout} />
+      </div>
+
+      {/* Mobile Cart Drawer Overlay (Screens < lg) */}
+      <AnimatePresence>
+        {isCartOpenOnMobile && (
+          <>
+            {/* Backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCartOpenOnMobile(false)}
+              className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs"
+            />
+            {/* Sliding drawer panel */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 260 }}
+              className="lg:hidden fixed inset-y-0 right-0 z-50 w-full sm:w-[360px] h-full bg-white shadow-2xl flex flex-col"
+            >
+              <CartPanel 
+                items={cartItems.map(item => {
+                  const dynamicProd = dynamicProducts.find(p => p.id === item.productId);
+                  return {
+                    ...item,
+                    maxStock: dynamicProd?.maxStock !== null && dynamicProd?.maxStock !== undefined 
+                      ? item.quantity + dynamicProd.maxStock 
+                      : null
+                  };
+                })} 
+                customerName={customerName} 
+                notes={orderNotes}
+                onUpdateQty={updateQty} onRemove={removeItem}
+                onCustomerNameChange={setCustomerName} onNotesChange={setOrderNotes}
+                onCheckout={handleCheckout}
+                onClose={() => setIsCartOpenOnMobile(false)}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Cart Button (FAB) - Mobile/Tablet only */}
+      <AnimatePresence>
+        {cartItems.length > 0 && !isCartOpenOnMobile && (
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="lg:hidden fixed bottom-18 left-4 right-4 z-30"
+          >
+            <button
+              onClick={() => setIsCartOpenOnMobile(true)}
+              className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl text-white font-semibold transition-all shadow-[0_8px_30px_rgba(192,139,92,0.3)] active:scale-98"
+              style={{
+                background: "linear-gradient(135deg, #c08b5c 0%, #a46f43 100%)",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/20">
+                  <ShoppingCart size={16} color="#FFFFFF" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs text-white/80 leading-none">Keranjang</p>
+                  <p className="text-sm font-bold mt-0.5">{cartItems.reduce((acc, curr) => acc + curr.quantity, 0)} Item</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold bg-black/15 px-3 py-1 rounded-xl">
+                  {formatCurrency(
+                    cartItems.reduce((sum, item) => {
+                      const modTotal = item.modifiers.reduce((ms, m) => ms + m.price, 0);
+                      return sum + (item.unitPrice + modTotal) * item.quantity;
+                    }, 0)
+                  )}
+                </span>
+                <ChevronRight size={16} />
+              </div>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modifier Modal */}
       <AnimatePresence>
