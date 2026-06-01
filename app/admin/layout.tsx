@@ -40,7 +40,7 @@ export default async function AdminLayout({
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "#F8F5F2" }}>
       <Sidebar role="admin" />
-      <main className="flex-1 overflow-y-auto pb-14 lg:pb-0">{children}</main>
+      <main className="flex-1 overflow-y-auto main-content-layout">{children}</main>
       <BottomNav role="admin" />
     </div>
   );

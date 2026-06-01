@@ -72,7 +72,7 @@ export default function CartPanel({
   const totalAmount = subtotal + totalFees;
 
   return (
-    <div className="cart-panel flex flex-col h-full w-full lg:w-[340px] flex-shrink-0">
+    <div className="cart-panel flex flex-col h-full w-full cart-panel-responsive flex-shrink-0">
       <div className="px-5 py-4 flex items-center gap-3" style={{ borderBottom: "1px solid rgba(0,0,0,0.05)" }}>
         <ShoppingCart size={18} color="#C08B5C" />
         <p className="text-sm font-semibold flex-1" style={{ color: "#2C241B" }}>Pesanan</p>
@@ -82,7 +82,7 @@ export default function CartPanel({
         {onClose && (
           <button
             onClick={onClose}
-            className="lg:hidden w-8 h-8 rounded-xl flex items-center justify-center hover:bg-black/5 active:scale-95 transition-all"
+            className="hide-on-desktop-tablet w-8 h-8 rounded-xl flex items-center justify-center hover:bg-black/5 active:scale-95 transition-all"
             title="Tutup"
           >
             <X size={18} color="#2C241B" />

@@ -40,7 +40,7 @@ export default async function KitchenLayout({
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "#F8F5F2" }}>
       <Sidebar role="kitchen" />
-      <main className="flex-1 overflow-hidden pb-14 lg:pb-0">{children}</main>
+      <main className="flex-1 overflow-hidden main-content-layout">{children}</main>
       <BottomNav role="kitchen" />
     </div>
   );

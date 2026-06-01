@@ -476,3 +476,52 @@ button,
 .pr-safe {
   padding-right: env(safe-area-inset-right);
 }
+
+/* ============================================
+   RESPONSIVE DESIGN ADAPTATIONS (MOBILE VS TABLET/DESKTOP)
+   ============================================ */
+
+/* Hide on desktop & tablet by default (so it is visible on mobile) */
+.hide-on-desktop-tablet {
+  display: block !important;
+}
+.hide-on-desktop-tablet-flex {
+  display: flex !important;
+}
+
+/* Show on desktop & tablet by default (so it is hidden on mobile) */
+.show-on-desktop-tablet {
+  display: none !important;
+}
+
+/* Padding for main layout when bottom navigation is visible */
+.main-content-layout {
+  padding-bottom: 3.5rem !important; /* pb-14 equivalent to clear BottomNav */
+}
+
+/* Floating Action Button (FAB) for mobile cart bottom spacing */
+.fab-mobile-cart {
+  bottom: 4.5rem !important; /* bottom-18 */
+}
+
+/* Desktop & Tablet: screen width >= 768px AND screen height >= 550px */
+@media (min-width: 768px) and (min-height: 550px) {
+  .show-on-desktop-tablet {
+    display: flex !important; /* for Flex components like Sidebar */
+  }
+  div.show-on-desktop-tablet,
+  aside.show-on-desktop-tablet {
+    display: flex !important; /* ensure flex container sidebar works */
+  }
+  .hide-on-desktop-tablet,
+  .hide-on-desktop-tablet-flex {
+    display: none !important;
+  }
+  .main-content-layout {
+    padding-bottom: 0px !important;
+  }
+  .cart-panel-responsive {
+    width: 340px !important;
+  }
+}
+

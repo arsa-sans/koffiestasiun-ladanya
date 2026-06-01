@@ -261,7 +261,7 @@ export default function CashierClient({ categories, initialIngredients, products
 
         {/* Product Grid */}
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             <AnimatePresence>
               {filteredProducts.map((product, i) => (
                 <motion.div key={product.id} initial={false} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
@@ -280,7 +280,7 @@ export default function CashierClient({ categories, initialIngredients, products
       </div>
 
       {/* Desktop Cart (Always visible on lg screens) */}
-      <div className="hidden lg:block h-full border-l border-black/5 flex-shrink-0">
+      <div className="show-on-desktop-tablet h-full border-l border-black/5 flex-shrink-0">
         <CartPanel 
           items={cartItems.map(item => {
             const dynamicProd = dynamicProducts.find(p => p.id === item.productId);
@@ -308,7 +308,7 @@ export default function CashierClient({ categories, initialIngredients, products
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsCartOpenOnMobile(false)}
-              className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs"
+              className="hide-on-desktop-tablet fixed inset-0 z-40 bg-black/60 backdrop-blur-xs"
             />
             {/* Sliding drawer panel */}
             <motion.div
@@ -316,7 +316,7 @@ export default function CashierClient({ categories, initialIngredients, products
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 28, stiffness: 260 }}
-              className="lg:hidden fixed inset-y-0 right-0 z-50 w-full sm:w-[360px] h-full bg-white shadow-2xl flex flex-col"
+              className="hide-on-desktop-tablet-flex fixed inset-y-0 right-0 z-50 w-full sm:w-[360px] h-full bg-white shadow-2xl flex flex-col"
             >
               <CartPanel 
                 items={cartItems.map(item => {
@@ -347,7 +347,7 @@ export default function CashierClient({ categories, initialIngredients, products
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="lg:hidden fixed bottom-18 left-4 right-4 z-30"
+            className="hide-on-desktop-tablet fixed fab-mobile-cart left-4 right-4 z-30"
           >
             <button
               onClick={() => setIsCartOpenOnMobile(true)}

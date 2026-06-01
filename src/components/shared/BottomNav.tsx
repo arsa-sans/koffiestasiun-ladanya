@@ -34,7 +34,7 @@ export default function BottomNav({ role }: BottomNavProps) {
   if (role === "kitchen") navItems = kitchenNav;
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-black/5 pb-safe pt-1 z-[100] px-2 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
+    <div className="hide-on-desktop-tablet fixed bottom-0 left-0 right-0 bg-white border-t border-black/5 pb-safe pt-1 z-[100] px-2 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
       <div className="flex justify-around items-center h-14">
         {navItems.map((item) => {
           const isActive =
