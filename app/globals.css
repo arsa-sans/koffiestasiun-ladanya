@@ -496,12 +496,12 @@ button,
 
 /* Padding for main layout when bottom navigation is visible */
 .main-content-layout {
-  padding-bottom: 3.5rem !important; /* pb-14 equivalent to clear BottomNav */
+  padding-bottom: 0px !important;
 }
 
 /* Floating Action Button (FAB) for mobile cart bottom spacing */
 .fab-mobile-cart {
-  bottom: 4.5rem !important; /* bottom-18 */
+  bottom: calc(1rem + env(safe-area-inset-bottom)) !important;
 }
 
 /* Desktop & Tablet: screen width >= 768px AND screen height >= 550px */

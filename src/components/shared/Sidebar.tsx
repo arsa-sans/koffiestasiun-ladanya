@@ -18,9 +18,12 @@ import {
   Receipt,
   ActivitySquare,
   Terminal,
+  X,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 
 interface NavItem {
   href: string;
@@ -81,6 +84,23 @@ export default function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const navItems = navMap[role];
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const handleToggle = () => setIsOpen((prev) => !prev);
+    const handleOpen = () => setIsOpen(true);
+    const handleClose = () => setIsOpen(false);
+
+    window.addEventListener("toggle-sidebar", handleToggle);
+    window.addEventListener("open-sidebar", handleOpen);
+    window.addEventListener("close-sidebar", handleClose);
+
+    return () => {
+      window.removeEventListener("toggle-sidebar", handleToggle);
+      window.removeEventListener("open-sidebar", handleOpen);
+      window.removeEventListener("close-sidebar", handleClose);
+    };
+  }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -89,132 +109,179 @@ export default function Sidebar({ role }: SidebarProps) {
     window.location.href = "/login";
   };
 
+  const renderSidebarContent = (isMobile = false, closeMobileDrawer?: () => void) => {
+    return (
+      <div className="flex flex-col h-full w-full">
+        {/* Logo */}
+        <div className="px-5 py-6 border-b" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: "rgba(192,139,92,0.15)", border: "1px solid rgba(192,139,92,0.25)" }}
+              >
+                <Coffee size={20} color="#C08B5C" />
+              </div>
+              <div>
+                <div
+                  className="text-sm font-bold leading-tight"
+                  style={{ fontFamily: "Playfair Display, serif", color: "#C08B5C" }}
+                >
+                  Koffie Station
+                </div>
+                <div className="text-xs" style={{ color: "rgba(44,36,27,0.4)", fontFamily: "Noto Serif JP, serif" }}>
+                  × Ladanya
+                </div>
+              </div>
+            </div>
+            {isMobile && closeMobileDrawer && (
+              <button
+                onClick={closeMobileDrawer}
+                className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-black/5 active:scale-95 transition-all text-[#2C241B]"
+                title="Tutup Menu"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+        </div>
 
+        {/* Role Badge */}
+        <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.04)" }}>
+          <div
+            className="flex items-center gap-2 px-3 py-2 rounded-xl"
+            style={{
+              background: "rgba(192,139,92,0.08)",
+              border: "1px solid rgba(192,139,92,0.15)",
+            }}
+          >
+            <span style={{ color: "#C08B5C" }}>{roleIcons[role]}</span>
+            <span
+              className="text-xs font-semibold uppercase tracking-wider"
+              style={{ color: "#C08B5C" }}
+            >
+              {roleLabels[role]}
+            </span>
+          </div>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          {navItems.map((item, index) => {
+            const isActive =
+              item.href === `/${role}`
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
+
+            const prevItem = index > 0 ? navItems[index - 1] : null;
+            const showSection = item.section && (!prevItem || prevItem.section !== item.section);
+
+            return (
+              <div key={item.href}>
+                {showSection && (
+                  <p
+                    className="text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1"
+                    style={{ color: "rgba(44,36,27,0.3)" }}
+                  >
+                    {item.section}
+                  </p>
+                )}
+                <Link href={item.href} onClick={() => isMobile && closeMobileDrawer && closeMobileDrawer()}>
+                  <motion.div
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative"
+                    style={{
+                      background: isActive
+                        ? "rgba(192,139,92,0.12)"
+                        : "transparent",
+                      color: isActive ? "#C08B5C" : "rgba(44,36,27,0.6)",
+                    }}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId={isMobile ? "activeNavMobile" : "activeNav"}
+                        className="absolute inset-0 rounded-xl"
+                        style={{
+                          background: "rgba(192,139,92,0.1)",
+                          border: "1px solid rgba(192,139,92,0.2)",
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10">{item.icon}</span>
+                    <span className="relative z-10 text-sm font-medium">
+                      {item.label}
+                    </span>
+                    {isActive && (
+                      <div
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full"
+                        style={{ background: "#C08B5C" }}
+                      />
+                    )}
+                  </motion.div>
+                </Link>
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* User / Logout */}
+        <div className="px-3 pb-4 border-t pt-3" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all"
+            style={{ color: "rgba(44,36,27,0.5)" }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "#f87171";
+              (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "rgba(44,36,27,0.5)";
+              (e.currentTarget as HTMLElement).style.background = "transparent";
+            }}
+          >
+            <LogOut size={18} />
+            <span className="text-sm font-medium">Keluar</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <aside
-      className="sidebar show-on-desktop-tablet flex-col h-full w-64 flex-shrink-0"
-      style={{ minHeight: "100vh" }}
-    >
-      {/* Logo */}
-      <div className="px-5 py-6 border-b" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "rgba(192,139,92,0.15)", border: "1px solid rgba(192,139,92,0.25)" }}
-          >
-            <Coffee size={20} color="#C08B5C" />
-          </div>
-          <div>
-            <div
-              className="text-sm font-bold leading-tight"
-              style={{ fontFamily: "Playfair Display, serif", color: "#C08B5C" }}
+    <>
+      {/* Inline Sidebar for Desktop / Tablet */}
+      <aside
+        className="sidebar show-on-desktop-tablet flex-col h-full w-64 flex-shrink-0"
+        style={{ minHeight: "100vh" }}
+      >
+        {renderSidebarContent(false)}
+      </aside>
+
+      {/* Sliding Sidebar Drawer for Mobile */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="hide-on-desktop-tablet fixed inset-0 z-[150] bg-black/60 backdrop-blur-xs"
+            />
+            {/* Drawer Panel */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 260 }}
+              className="hide-on-desktop-tablet fixed inset-y-0 left-0 z-[200] w-64 h-full bg-[#F8F5F2] shadow-2xl flex flex-col"
+              style={{ borderRight: "1px solid rgba(0, 0, 0, 0.08)" }}
             >
-              Koffie Station
-            </div>
-            <div className="text-xs" style={{ color: "rgba(44,36,27,0.4)", fontFamily: "Noto Serif JP, serif" }}>
-              × Ladanya
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Role Badge */}
-      <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(0,0,0,0.04)" }}>
-        <div
-          className="flex items-center gap-2 px-3 py-2 rounded-xl"
-          style={{
-            background: "rgba(192,139,92,0.08)",
-            border: "1px solid rgba(192,139,92,0.15)",
-          }}
-        >
-          <span style={{ color: "#C08B5C" }}>{roleIcons[role]}</span>
-          <span
-            className="text-xs font-semibold uppercase tracking-wider"
-            style={{ color: "#C08B5C" }}
-          >
-            {roleLabels[role]}
-          </span>
-        </div>
-      </div>
-
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {navItems.map((item, index) => {
-          const isActive =
-            item.href === `/${role}`
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-
-          const prevItem = index > 0 ? navItems[index - 1] : null;
-          const showSection = item.section && (!prevItem || prevItem.section !== item.section);
-
-          return (
-            <div key={item.href}>
-              {showSection && (
-                <p
-                  className="text-xs font-semibold uppercase tracking-wider px-3 pt-4 pb-1"
-                  style={{ color: "rgba(44,36,27,0.3)" }}
-                >
-                  {item.section}
-                </p>
-              )}
-              <Link href={item.href}>
-                <motion.div
-                  whileTap={{ scale: 0.97 }}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative"
-                  style={{
-                    background: isActive
-                      ? "rgba(192,139,92,0.12)"
-                      : "transparent",
-                    color: isActive ? "#C08B5C" : "rgba(44,36,27,0.6)",
-                  }}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeNav"
-                      className="absolute inset-0 rounded-xl"
-                      style={{
-                        background: "rgba(192,139,92,0.1)",
-                        border: "1px solid rgba(192,139,92,0.2)",
-                      }}
-                    />
-                  )}
-                  <span className="relative z-10">{item.icon}</span>
-                  <span className="relative z-10 text-sm font-medium">
-                    {item.label}
-                  </span>
-                  {isActive && (
-                    <div
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full"
-                      style={{ background: "#C08B5C" }}
-                    />
-                  )}
-                </motion.div>
-              </Link>
-            </div>
-          );
-        })}
-      </nav>
-
-      {/* User / Logout */}
-      <div className="px-3 pb-4 border-t pt-3" style={{ borderColor: "rgba(0,0,0,0.06)" }}>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all"
-          style={{ color: "rgba(44,36,27,0.5)" }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "#f87171";
-            (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.color = "rgba(44,36,27,0.5)";
-            (e.currentTarget as HTMLElement).style.background = "transparent";
-          }}
-        >
-          <LogOut size={18} />
-          <span className="text-sm font-medium">Keluar</span>
-        </button>
-      </div>
-    </aside>
+              {renderSidebarContent(true, () => setIsOpen(false))}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

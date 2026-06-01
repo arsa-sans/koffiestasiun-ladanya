@@ -6,7 +6,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import Sidebar from "@/components/shared/Sidebar";
-import BottomNav from "@/components/shared/BottomNav";
+import MobileHeader from "@/components/shared/MobileHeader";
 
 export const metadata: Metadata = {
   title: "Kitchen Display",
@@ -40,8 +40,10 @@ export default async function KitchenLayout({
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "#F8F5F2" }}>
       <Sidebar role="kitchen" />
-      <main className="flex-1 overflow-hidden main-content-layout">{children}</main>
-      <BottomNav role="kitchen" />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <MobileHeader title="Kitchen Display" />
+        <main className="flex-1 overflow-hidden">{children}</main>
+      </div>
     </div>
   );
 }
