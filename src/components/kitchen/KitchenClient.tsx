@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
+import { Clock, ChevronRight, Maximize2, Minimize2, Layers, ChefHat, Send } from "lucide-react";
 import { advanceItemStatus } from "@/server/actions/kitchen";
 import { STATION_COLORS, STATION_LABELS, STATUS_COLORS } from "@/constants";
 import { createClient } from "@/lib/supabase/client";
@@ -36,6 +36,7 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
   const [station, setStation] = useState<string>("all");
   const [fullscreen, setFullscreen] = useState(false);
   const [now, setNow] = useState(new Date());
+  const [activeTab, setActiveTab] = useState<"antri" | "masak" | "antar">("antri");
 
   // Live clock
   useEffect(() => {
@@ -118,17 +119,27 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
     }
   };
 
-  // Filter items by station
-  const filteredOrders = orders
-    .map((order) => ({
-      ...order,
-      items: order.items.filter((item) => {
+  // Flatten and filter items by station & valid statuses
+  const derivedItems = orders.flatMap((order) =>
+    order.items
+      .filter((item) => {
         if (item.status === "delivered" || item.status === "canceled" || item.status === "void") return false;
         if (station !== "all") return item.product.station.type === station;
         return true;
-      }),
-    }))
-    .filter((order) => order.items.length > 0);
+      })
+      .map((item) => ({
+        ...item,
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        orderType: order.orderType,
+        tableCode: order.table?.code,
+      }))
+  );
+
+  // Split into Kanban columns
+  const antriItems = derivedItems.filter((item) => item.status === "pending" || item.status === "queued");
+  const masakItems = derivedItems.filter((item) => item.status === "cooking");
+  const antarItems = derivedItems.filter((item) => item.status === "ready");
 
   const getElapsedMins = (dateStr: string) => Math.floor((now.getTime() - new Date(dateStr).getTime()) / 60000);
   const getElapsedFormatted = (dateStr: string) => {
@@ -144,9 +155,122 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
     return "#EF4444";
   };
 
-  const getNextLabel = (status: string) => {
-    const map: Record<string, string> = { pending: "Antri", queued: "Masak", cooking: "Siap", ready: "Selesai" };
-    return map[status] || "→";
+  const getButtonLabel = (status: string) => {
+    if (status === "pending") return "Mulai Antrean";
+    if (status === "queued") return "Mulai Masak";
+    if (status === "cooking") return "Selesai Masak";
+    if (status === "ready") return "Selesai Diantar";
+    return "Lanjut";
+  };
+
+  const renderItemCard = (item: any) => {
+    const elapsedMins = getElapsedMins(item.createdAt);
+    const elapsedFormatted = getElapsedFormatted(item.createdAt);
+    const statusColor = STATUS_COLORS[item.status] || "#C08B5C";
+    const isTakeaway = item.orderType === "takeaway";
+
+    return (
+      <motion.div
+        key={item.id}
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        layout
+        className="rounded-2xl overflow-hidden bg-white border border-black/5 hover:border-[#C08B5C]/35 hover:shadow-md transition-all duration-200"
+        style={{
+          boxShadow: "0 2px 12px rgba(0,0,0,0.03)",
+        }}
+      >
+        {/* Top Accent line based on status */}
+        <div style={{ height: 4, background: statusColor }} />
+
+        {/* Card Content */}
+        <div className="p-4 flex flex-col gap-3">
+          {/* Header */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {isTakeaway ? (
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold inline-block bg-purple-500/10 text-purple-600">
+                  📦 Takeaway
+                </span>
+              ) : (
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold inline-block bg-[rgba(192,139,92,0.1)] text-[#C08B5C]">
+                  🪑 Meja {item.tableCode || "-"}
+                </span>
+              )}
+              <span className="text-[10px] font-mono font-semibold text-[#2C241B]/40">
+                #{item.orderNumber}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg" style={{ background: `${elapsedColor(elapsedMins)}12` }}>
+              <Clock size={11} color={elapsedColor(elapsedMins)} />
+              <span className="text-xs font-bold font-mono" style={{ color: elapsedColor(elapsedMins) }}>
+                {elapsedFormatted}
+              </span>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="h-[1px] bg-black/[0.04]" />
+
+          {/* Product and details */}
+          <div className="min-w-0">
+            <h4 className="text-sm font-bold text-[#2C241B] leading-snug">
+              <span className="text-[#C08B5C] font-extrabold mr-1.5">{item.quantity}×</span>
+              {item.product.name}
+            </h4>
+
+            {item.modifiers.length > 0 && (
+              <p className="text-[11px] mt-1 text-[#C08B5C]/80 font-medium">
+                + {item.modifiers.map((m: any) => m.name).join(", ")}
+              </p>
+            )}
+
+            {item.notes && (
+              <p className="text-[11px] italic mt-2 text-[#2C241B]/50 bg-black/[0.02] px-2.5 py-1.5 rounded-lg border border-black/[0.03]">
+                📝 {item.notes}
+              </p>
+            )}
+          </div>
+
+          {/* Cooking timer */}
+          {item.startedAt && (
+            <div className="text-[10px] flex items-center gap-1 text-[#2C241B]/50 font-medium">
+              <Clock size={10} />
+              {item.status === "cooking" ? (
+                <span className="font-mono text-blue-600">Memasak: {getElapsedFormatted(item.startedAt)}</span>
+              ) : (
+                <span className="font-mono">Selesai Masak: {item.completedAt ? getElapsedFormatted(item.startedAt) : "-"}</span>
+              )}
+            </div>
+          )}
+
+          {/* Ready timer */}
+          {item.status === "ready" && item.completedAt && (
+            <div className="text-[10px] flex items-center gap-1 text-emerald-600 font-medium">
+              <Clock size={10} />
+              <span className="font-mono">Menunggu Antar: {getElapsedFormatted(item.completedAt)}</span>
+            </div>
+          )}
+
+          {/* Action Button */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => handleAdvance(item.id, item.status)}
+            className="w-full mt-1 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+            style={{
+              background: item.status === "ready" ? "rgba(16,185,129,0.12)" : `${statusColor}12`,
+              color: item.status === "ready" ? "#10B981" : statusColor,
+              border: item.status === "ready" ? "1px solid rgba(16,185,129,0.2)" : `1px solid ${statusColor}20`,
+            }}
+          >
+            <span>{getButtonLabel(item.status)}</span>
+            {item.status !== "ready" && <ChevronRight size={12} />}
+          </motion.button>
+        </div>
+      </motion.div>
+    );
   };
 
   return (
@@ -159,7 +283,7 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
             const color = s === "all" ? "#C08B5C" : STATION_COLORS[s];
             return (
               <motion.button key={s} whileTap={{ scale: 0.95 }} onClick={() => setStation(s)}
-                className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                className="px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer"
                 style={{
                   background: isActive ? `${color}22` : "rgba(0,0,0,0.04)",
                   color: isActive ? color : "rgba(44,36,27,0.5)",
@@ -172,134 +296,195 @@ export default function KitchenClient({ initialOrders }: { initialOrders: Kitche
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-xs font-medium px-3 py-1 rounded-full" style={{ background: "rgba(16,185,129,0.1)", color: "#10B981" }}>
-            {filteredOrders.length} order aktif
+          <span className="text-xs font-medium px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600">
+            {derivedItems.length} menu aktif
           </span>
           <div className="flex items-center gap-1.5 text-sm" style={{ color: "rgba(44,36,27,0.5)" }}>
             <Clock size={14} />
             {now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
           </div>
-          <button onClick={() => setFullscreen(!fullscreen)} className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(0,0,0,0.06)" }}>
+          <button onClick={() => setFullscreen(!fullscreen)} className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer hover:bg-black/5" style={{ background: "rgba(0,0,0,0.06)" }}>
             {fullscreen ? <Minimize2 size={16} color="#2C241B" /> : <Maximize2 size={16} color="#2C241B" />}
           </button>
         </div>
       </div>
 
-      {/* Order Queue */}
-      <div className="flex-1 overflow-y-auto p-5">
-        {filteredOrders.length === 0 ? (
+      {/* Mobile view Tab selector */}
+      <div className="flex md:hidden bg-white/95 backdrop-blur-md p-2 gap-2 border-b border-black/5 flex-shrink-0">
+        <button
+          onClick={() => setActiveTab("antri")}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            activeTab === "antri"
+              ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
+              : "text-[#2C241B]/55 border border-transparent"
+          }`}
+        >
+          <Layers size={13} />
+          <span>Antri</span>
+          <span className="px-1.5 py-0.5 rounded-full text-[9px] bg-amber-500/15 text-amber-700 font-extrabold">
+            {antriItems.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("masak")}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            activeTab === "masak"
+              ? "bg-blue-500/10 text-blue-700 border border-blue-500/20"
+              : "text-[#2C241B]/55 border border-transparent"
+          }`}
+        >
+          <ChefHat size={13} />
+          <span>Masak</span>
+          <span className="px-1.5 py-0.5 rounded-full text-[9px] bg-blue-500/15 text-blue-700 font-extrabold">
+            {masakItems.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("antar")}
+          className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            activeTab === "antar"
+              ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20"
+              : "text-[#2C241B]/55 border border-transparent"
+          }`}
+        >
+          <Send size={13} />
+          <span>Antar</span>
+          <span className="px-1.5 py-0.5 rounded-full text-[9px] bg-emerald-500/15 text-emerald-700 font-extrabold">
+            {antarItems.length}
+          </span>
+        </button>
+      </div>
+
+      {/* Main Kanban Content */}
+      <div className="flex-1 min-h-0 overflow-hidden relative">
+        {derivedItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full">
             <p className="text-xl font-semibold mb-2" style={{ color: "#2C241B", fontFamily: "Playfair Display, serif" }}>Tidak ada pesanan</p>
             <p className="text-sm" style={{ color: "rgba(44,36,27,0.4)" }}>Dapur sedang tenang...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4" style={{ alignItems: "start" }}>
-            <AnimatePresence>
-              {filteredOrders.map((order) => {
-                const elapsedMins = getElapsedMins(order.createdAt);
-                const elapsedFormatted = getElapsedFormatted(order.createdAt);
-                const primaryStatus = order.items[0]?.status || "pending";
-                const statusBarColor = primaryStatus === "cooking" ? "#3B82F6"
-                  : primaryStatus === "ready" ? "#10B981"
-                  : primaryStatus === "queued" ? "#D97706"
-                  : "#F59E0B";
-                const isTakeaway = !order.table;
-
-                return (
-                  <motion.div
-                    key={order.id}
-                    initial={false}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    layout
-                    className="rounded-2xl overflow-hidden"
-                    style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}
-                  >
-                    {/* Color Bar Top */}
-                    <div style={{ height: 4, background: statusBarColor }} />
-
-                    {/* Card Header */}
-                    <div className="px-4 py-3 flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-bold" style={{ color: "#2C241B" }}>{order.orderNumber}</p>
-                        {isTakeaway
-                          ? <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold inline-block mt-0.5" style={{ background: "rgba(139,92,246,0.1)", color: "#8B5CF6" }}>📦 Takeaway</span>
-                          : <p className="text-xs" style={{ color: "rgba(44,36,27,0.45)" }}>Meja {order.table!.code}</p>
-                        }
-                      </div>
-                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: `${elapsedColor(elapsedMins)}12` }}>
-                        <Clock size={11} color={elapsedColor(elapsedMins)} />
-                        <span className="text-xs font-bold font-mono" style={{ color: elapsedColor(elapsedMins) }}>{elapsedFormatted}</span>
-                      </div>
+          <>
+            {/* Desktop & Tablet: 3 columns layout */}
+            <div className="hidden md:grid md:grid-cols-3 gap-5 p-5 h-full min-h-0 overflow-hidden">
+              {/* Column 1: Antri */}
+              <div className="flex flex-col h-full bg-[#F4F0EC]/40 border border-black/5 rounded-2xl min-h-0 overflow-hidden">
+                <div className="p-4 border-b border-black/5 bg-white flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                      <Layers size={16} />
                     </div>
-
-                    {/* Divider */}
-                    <div style={{ height: 1, background: "rgba(0,0,0,0.04)", margin: "0 16px" }} />
-
-                    {/* Card Items */}
-                    <div className="p-3 space-y-2">
-                      {order.items.map((item) => {
-                        const statusColor = STATUS_COLORS[item.status] || "#C08B5C";
-                        return (
-                          <div key={item.id} className="rounded-xl p-3" style={{ background: "#F8F5F2" }}>
-                            <div className="flex items-start justify-between gap-2 mb-2">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold" style={{ color: "#2C241B" }}>
-                                  <span className="font-bold" style={{ color: "#C08B5C" }}>{item.quantity}×</span>{" "}
-                                  {item.product.name}
-                                </p>
-                                {item.modifiers.length > 0 && (
-                                  <p className="text-[11px] mt-0.5" style={{ color: "rgba(192,139,92,0.7)" }}>
-                                    + {item.modifiers.map((m) => m.name).join(", ")}
-                                  </p>
-                                )}
-                                {item.notes && (
-                                  <p className="text-[11px] italic mt-0.5" style={{ color: "rgba(44,36,27,0.4)" }}>📝 {item.notes}</p>
-                                )}
-                              </div>
-                              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex-shrink-0"
-                                style={{ background: `${statusColor}15`, color: statusColor }}>
-                                {item.status}
-                              </span>
-                            </div>
-
-                            {/* Cooking duration */}
-                            {item.startedAt && (
-                              <div className="text-[11px] flex items-center gap-1 mb-2" style={{ color: "rgba(44,36,27,0.45)" }}>
-                                <Clock size={10} />
-                                {item.completedAt ? (
-                                  <span>Selesai dalam {getElapsedFormatted(item.startedAt)}</span>
-                                ) : (
-                                  <span className="font-mono">Memasak {getElapsedFormatted(item.startedAt)}</span>
-                                )}
-                              </div>
-                            )}
-
-                            {item.status !== "delivered" && (
-                              <motion.button
-                                whileTap={{ scale: 0.96 }}
-                                onClick={() => handleAdvance(item.id, item.status)}
-                                className="w-full py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-1.5"
-                                style={{
-                                  background: item.status === "ready" ? "rgba(139,92,246,0.12)" : `${statusColor}12`,
-                                  color: item.status === "ready" ? "#8B5CF6" : statusColor,
-                                  border: item.status === "ready" ? "1px solid rgba(139,92,246,0.25)" : `1px solid ${statusColor}25`,
-                                }}>
-                                {item.status === "ready" ? "✓ Selesai Diantar" : getNextLabel(item.status)}
-                                {item.status !== "ready" && <ChevronRight size={14} />}
-                              </motion.button>
-                            )}
-                          </div>
-                        );
-                      })}
+                    <span className="font-bold text-sm text-[#2C241B]">Antrean Dapur</span>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs bg-amber-500/10 text-amber-700 font-bold">
+                    {antriItems.length} menu
+                  </span>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  <AnimatePresence mode="popLayout">
+                    {antriItems.map((item) => renderItemCard(item))}
+                  </AnimatePresence>
+                  {antriItems.length === 0 && (
+                    <div className="h-full flex items-center justify-center text-xs text-[#2C241B]/40 py-8">
+                      Tidak ada antrean
                     </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Column 2: Masak */}
+              <div className="flex flex-col h-full bg-[#F4F0EC]/40 border border-black/5 rounded-2xl min-h-0 overflow-hidden">
+                <div className="p-4 border-b border-black/5 bg-white flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
+                      <ChefHat size={16} />
+                    </div>
+                    <span className="font-bold text-sm text-[#2C241B]">Sedang Dimasak</span>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs bg-blue-500/10 text-blue-700 font-bold">
+                    {masakItems.length} menu
+                  </span>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  <AnimatePresence mode="popLayout">
+                    {masakItems.map((item) => renderItemCard(item))}
+                  </AnimatePresence>
+                  {masakItems.length === 0 && (
+                    <div className="h-full flex items-center justify-center text-xs text-[#2C241B]/40 py-8">
+                      Belum ada yang dimasak
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Column 3: Antar */}
+              <div className="flex flex-col h-full bg-[#F4F0EC]/40 border border-black/5 rounded-2xl min-h-0 overflow-hidden">
+                <div className="p-4 border-b border-black/5 bg-white flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                      <Send size={16} />
+                    </div>
+                    <span className="font-bold text-sm text-[#2C241B]">Siap Diantar</span>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs bg-emerald-500/10 text-emerald-700 font-bold">
+                    {antarItems.length} menu
+                  </span>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  <AnimatePresence mode="popLayout">
+                    {antarItems.map((item) => renderItemCard(item))}
+                  </AnimatePresence>
+                  {antarItems.length === 0 && (
+                    <div className="h-full flex items-center justify-center text-xs text-[#2C241B]/40 py-8">
+                      Belum ada yang siap antar
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile (sm): single column tab content layout */}
+            <div className="md:hidden h-full flex flex-col min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F4F0EC]/20">
+                <AnimatePresence mode="popLayout">
+                  {activeTab === "antri" && (
+                    <>
+                      {antriItems.map((item) => renderItemCard(item))}
+                      {antriItems.length === 0 && (
+                        <div className="h-full flex flex-col items-center justify-center text-xs text-[#2C241B]/40 py-16">
+                          Tidak ada antrean
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {activeTab === "masak" && (
+                    <>
+                      {masakItems.map((item) => renderItemCard(item))}
+                      {masakItems.length === 0 && (
+                        <div className="h-full flex flex-col items-center justify-center text-xs text-[#2C241B]/40 py-16">
+                          Belum ada yang dimasak
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {activeTab === "antar" && (
+                    <>
+                      {antarItems.map((item) => renderItemCard(item))}
+                      {antarItems.length === 0 && (
+                        <div className="h-full flex flex-col items-center justify-center text-xs text-[#2C241B]/40 py-16">
+                          Belum ada yang siap antar
+                        </div>
+                      )}
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
   );
 }
+
