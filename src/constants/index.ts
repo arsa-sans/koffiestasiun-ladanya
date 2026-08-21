@@ -1,4 +1,3 @@
-// src/constants/index.ts
 export const APP_NAME = "Koffie Station × Ladanya";
 export const APP_SHORT = "KoffieStation";
 
